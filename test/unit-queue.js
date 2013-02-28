@@ -10,7 +10,7 @@ var Queue = require("../lib/queue"),
             .on("queue-complete", function(state){ console.log("Queue complete: " + state); })
             .on("job-starting", function(state){ console.log("Job starting: " + state); })
             .on("job-progress", function(state, progress){ 
-                console.log("Job starting: " + state + progress.percentComplete); 
+                console.log("Job progress: " + state + progress.percentComplete); 
             })
             .on("job-complete", function(state){ console.log("Job complete: " + state); })
             .on("job-success", function(state){ console.log("Job success: " + state); })
