@@ -76,23 +76,23 @@ describe("Queue", function(){
         var queue = new Queue({ name: "test" }),
             output = [];
 
-        function run(number){
-            output.push(number);
+        function run(){
+            output.push(1);
         }
         
         queue.add([
-            { name: "job 1", command: run, args: 1 },
-            { name: "job 2", command: run, args: 2 },
-            { name: "job 3", command: run, args: 3 }
+            { name: "job 1", command: run },
+            { name: "job 2", command: run },
+            { name: "job 3", command: run }
         ]);
         
         assert.strictEqual(queue.jobs.length, 3);
         assert.strictEqual(queue.jobs[1].name, "job 2");
         
-        queue.start()
-            .on("queue-complete", function(){
+        queue.on("queue-complete", function(){
                 assert.strictEqual(output.length, 3);
-            });
+            })
+            .start();
     });
 
     it("should be possible to collect stats about the queued jobs", function(){
