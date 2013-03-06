@@ -2,8 +2,8 @@ var Queue = require("../lib/queue"),
     Job = require("../lib/job"),
     util = require("util");
 
-// describe("Queue", function(){
-//     it("queue synopsis", function(){
+describe("Queue", function(){
+    it("queue synopsis", function(){
     
         var queue = new Queue({ name: "Main Queue" })
             .on("queue-starting", function(state){ console.log("Queue starting: " + state); })
@@ -53,8 +53,8 @@ var Queue = require("../lib/queue"),
 
         queue.print();
         queue.start();
-//    });
-// });
+   });
+});
 
 /**
 list of jobs
