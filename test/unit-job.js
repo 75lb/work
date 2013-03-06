@@ -1,4 +1,4 @@
-var Job = require("./job");
+var work = require("../lib/work");
 
 describe("Job", function(){
     

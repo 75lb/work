@@ -1,24 +1,26 @@
-var Queue = require("../lib/queue"),
-    Job = require("../lib/job"),
-    util = require("util");
+var work = require("../lib/work"),
+    util = require("util"),
+    assert = require("assert"),
+    Queue = work.Queue,
+    Job = work.Job;
 
 describe("Queue", function(){
     it("queue synopsis", function(){
-    
+        function log(){}
         var queue = new Queue({ name: "Main Queue" })
-            .on("queue-starting", function(state){ console.log("Queue starting: " + state); })
-            .on("queue-complete", function(state){ console.log("Queue complete: " + state); })
-            .on("job-starting", function(state){ console.log("Job starting: " + state); })
+            .on("queue-starting", function(state){ log("Queue starting: " + state); })
+            .on("queue-complete", function(state){ log("Queue complete: " + state); })
+            .on("job-starting", function(state){ log("Job starting: " + state); })
             .on("job-progress", function(state, progress){ 
-                console.log("Job progress: " + state + progress.percentComplete); 
+                log("Job progress: " + state + progress.percentComplete); 
             })
-            .on("job-complete", function(state){ console.log("Job complete: " + state); })
-            .on("job-success", function(state){ console.log("Job success: " + state); })
-            .on("job-fail", function(state){ console.log("Job fail: " + state); })
-            .on("job-info", function(state, msg){ console.log("Job info: " + msg + state); })
-            .on("job-warning", function(state, msg){ console.log("job-warning: " + msg + state); })
-            .on("job-error", function(state, err){ console.log("job-error: " + state + err); })
-            .on("job-terminated", function(state){ console.log("job-terminated: " + state); });
+            .on("job-complete", function(state){ log("Job complete: " + state); })
+            .on("job-success", function(state){ log("Job success: " + state); })
+            .on("job-fail", function(state){ log("Job fail: " + state); })
+            .on("job-info", function(state, msg){ log("Job info: " + msg + state); })
+            .on("job-warning", function(state, msg){ log("job-warning: " + msg + state); })
+            .on("job-error", function(state, err){ log("job-error: " + state + err); })
+            .on("job-terminated", function(state){ log("job-terminated: " + state); });
 
         ["Dave", "Alan", "Geoff", "Mohammad", "Jesus", "Mandy"].forEach(function(person){
             var job = new Job({
@@ -35,7 +37,7 @@ describe("Queue", function(){
             job.onSuccess.add({
                 name: util.format("notify %s of success", person),
                 command: function(){
-                    console.log("SUCCESS, %s!", person);
+                    log("SUCCESS, %s!", person);
                     this.emitSuccess();
                 }
             });
@@ -43,7 +45,7 @@ describe("Queue", function(){
             job.onFail.add({
                 name: util.format("notify %s of failure", person),
                 command: function(){
-                    console.log("FAILED, %s!", person);
+                    log("FAILED, %s!", person);
                     this.emitSuccess();
                 }
             });
@@ -51,9 +53,53 @@ describe("Queue", function(){
             queue.add(job);
         });
 
-        queue.print();
         queue.start();
    });
+
+    it("add(job)", function(){
+        var queue = new Queue({ name: "test" });
+        queue.add(new Job({ name: "test" }));
+        
+        assert.strictEqual(queue.jobs.length, 1);
+        assert.strictEqual(queue.jobs[0].name, "test");        
+    });
+
+    it("add(jobOptions)", function(){
+        var queue = new Queue({ name: "test" });
+        queue.add({ name: "test" });
+        
+        assert.strictEqual(queue.jobs.length, 1);
+        assert.strictEqual(queue.jobs[0].name, "test");
+    });
+
+    it("add(jobArray)", function(){
+        var queue = new Queue({ name: "test" }),
+            output = [];
+
+        function run(number){
+            output.push(number);
+        }
+        
+        queue.add([
+            { name: "job 1", command: run, args: 1 },
+            { name: "job 2", command: run, args: 2 },
+            { name: "job 3", command: run, args: 3 }
+        ]);
+        
+        assert.strictEqual(queue.jobs.length, 3);
+        assert.strictEqual(queue.jobs[1].name, "job 2");
+        
+        queue.start()
+            .on("queue-complete", function(){
+                assert.strictEqual(output.length, 3);
+            });
+    });
+
+    it("should be possible to collect stats about the queued jobs", function(){
+       var files = ["one.wmv", "two.avi", "three.avi", "four.mp4", "five.mp4"];
+       
+       
+    });
 });
 
 /**
