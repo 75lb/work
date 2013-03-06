@@ -22,4 +22,12 @@ describe("Job", function(){
         
         assert.strictEqual(total, 35);
     });
+    
+    it("`data` property can be accessed from `command`", function(){
+        var job = new Job({ name: "job", data: { dat: "data" }, command: function(){
+            console.log("OK");
+            assert.strictEqual(this.data.dat, "data");
+        }});
+        job.run();
+    });
 });
