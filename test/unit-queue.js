@@ -177,7 +177,7 @@ describe("Queue", function(){
                     var self = this;
                     setTimeout(function(){
                         self.emitSuccess();
-                    },100);
+                    },10);
                 }
             });
             var job2 = new Job({
@@ -206,8 +206,8 @@ describe("Queue", function(){
         it("mixed jobs 1", function(done){
             var output = [];
             var queue = new Queue({ name: "test-queue"}),
-                job1 = new GenericJob("job1", true, 50),
-                job2 = new GenericJob("job2", false, 20),
+                job1 = new GenericJob("job1", true, 20),
+                job2 = new GenericJob("job2", false, 10),
                 job3 = new GenericJob("job3", true, 5);
             queue.add([ job1, job2, job3 ]);
         
@@ -232,8 +232,8 @@ describe("Queue", function(){
         it("mixed jobs 2", function(done){
             var output = [];
             var queue = new Queue({ name: "test-queue"}),
-                job1 = new GenericJob("job1", false, 50),
-                job2 = new GenericJob("job2", false, 20),
+                job1 = new GenericJob("job1", false, 20),
+                job2 = new GenericJob("job2", false, 10),
                 job3 = new GenericJob("job3", false, 5);
             queue.add([ job1, job2, job3 ]);
         
@@ -254,6 +254,36 @@ describe("Queue", function(){
                 })
                 .start();
         });
+
+        it("mixed jobs 3", function(done){
+            var output = [];
+            var queue = new Queue({ name: "test-queue"}),
+                job1 = new GenericJob("job1", true, 20),
+                job2 = new GenericJob("job2", true, 10),
+                job3 = new GenericJob("job3", true, 5);
+            queue.add([ job1, job2, job3 ]);
+        
+            job1.on("job-complete", function(){
+                output.push(this.name);
+            });
+            job2.on("job-complete", function(){
+                output.push(this.name);
+            });
+            job3.on("job-complete", function(){
+                output.push(this.name);
+            });
+
+            queue
+                .on("queue-complete", function (){ 
+                    assert.deepEqual(output, ["job3", "job2", "job1"]);
+                    done();
+                })
+                .start();
+        });
+        
+        // it("mixed jobs with onComplete queues", function(done){
+        //     
+        // })
     });
 });
 

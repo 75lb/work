@@ -6,8 +6,6 @@ var work = require("../lib/work"),
 function l(msg){console.log(msg)}
 
 describe("Job", function(){
-    it("`args` property must be an array");
-    
     it("should pass `args` array to `command`", function(){
         var total = 0;
         function add(){
@@ -29,4 +27,27 @@ describe("Job", function(){
         }});
         job.run();
     });
+    
+    it("instantiate job with an onComplete queue", function(){
+        var job = new Job({ 
+            name: "one", 
+            command: console.log, 
+            args: "testing",
+            onSuccess: new Queue({ name: "onSuccess" }).add([
+                { name: "success", command: console.log, args: "job success" }
+            ])
+        });
+        
+        assert.strictEqual(job.onSuccess.jobs[0].name, "success");
+    });
+    
+    it("commandSync() should call emitSuccess automatically if not explicitly called", function(){
+        var job = new Job({ name: "one", commandSync: console.log, args: "testing" });
+        var successFired = false; 
+        job.on("job-success", function(){
+            successFired = true;
+        });
+        job.run();
+        assert.strictEqual(successFired, true);
+    })
 });
