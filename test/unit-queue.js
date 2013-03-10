@@ -6,6 +6,11 @@ var work = require("../lib/work"),
     Queue = work.Queue,
     Job = work.Job;
 
+function l(msg){
+    var args = Array.prototype.slice.call(arguments);
+    console.log.apply(this, args);
+}
+
 describe("Queue", function(){
     it("queue synopsis", function(){
         function log(){}
@@ -147,97 +152,109 @@ describe("Queue", function(){
        
     });
     
-    it("synchronous jobs", function(done){
-        var job1Success = false,
-            job2Success = false;
+    describe("start() behaviour", function(){
+        function GenericJob(name, async, time){
+            Job.call(this, { 
+                name: name, 
+                async: async,
+                command: function(){
+                    var self = this;
+                    setTimeout(function(){
+                        self.emitSuccess();
+                    },time);
+                }
+            });
+        }
+        util.inherits(GenericJob, Job);
+        
+        it("all synchronous jobs", function(done){
+            var job1Success = false,
+                job2Success = false;
             
-        var job1 = new Job({
-            name: "one",
-            command: function(){
-                var self = this;
-                console.log("JOB1");
-                setTimeout(function(){
-                    self.emitSuccess();
-                },100);
-            }
-        });
-        var job2 = new Job({
-            name: "two", 
-            command: function(){
-                console.log("JOB2");
-                this.emitSuccess();
-            }
-        });
+            var job1 = new Job({
+                name: "one",
+                command: function(){
+                    var self = this;
+                    setTimeout(function(){
+                        self.emitSuccess();
+                    },100);
+                }
+            });
+            var job2 = new Job({
+                name: "two", 
+                command: function(){
+                    this.emitSuccess();
+                }
+            });
         
-        var queue = new Queue();
-        queue.add([ job1, job2 ]);
+            var queue = new Queue();
+            queue.add([ job1, job2 ]);
         
-        job1.on("job-success", function(){
-            job1Success = true;
-            assert.strictEqual(job2Success, false);
-        });
-        job2.on("job-success", function(){
-            job2Success = true;
-            assert.strictEqual(job1Success, true);
-        });
+            job1.on("job-success", function(){
+                job1Success = true;
+                assert.strictEqual(job2Success, false);
+            });
+            job2.on("job-success", function(){
+                job2Success = true;
+                assert.strictEqual(job1Success, true);
+            });
         
-        queue.start()
-            .on("queue-complete", function(){ done(); });
-    })
-    it("asynchronous jobs", function(done){
-        var output = [];
-            
-        var job1 = new Job({
-            name: "one",
-            async: true,
-            command: function(){
-                var self = this;
-                setTimeout(function(){
-                    console.log("JOB1");
-                    self.emitSuccess();
-                },100);
-            }
-        });
-        var job2 = new Job({
-            name: "two", 
-            command: function(){
-                console.log("JOB2");
-                this.emitSuccess();
-            }
-        });
-        var job3 = new Job({
-            name: "three", 
-            async: true,
-            command: function(){
-                console.log("JOB3");
-                this.emitSuccess();
-            }
-        });
+            queue.start()
+                .on("queue-complete", function(){ done(); });
+        })
+    
+        it("mixed jobs 1", function(done){
+            var output = [];
+            var queue = new Queue({ name: "test-queue"}),
+                job1 = new GenericJob("job1", true, 50),
+                job2 = new GenericJob("job2", false, 20),
+                job3 = new GenericJob("job3", true, 5);
+            queue.add([ job1, job2, job3 ]);
         
-        var queue = new Queue();
-        queue.add([ job1, job2, job3 ]);
+            job1.on("job-complete", function(){
+                output.push(this.name);
+            });
+            job2.on("job-complete", function(){
+                output.push(this.name);
+            });
+            job3.on("job-complete", function(){
+                output.push(this.name);
+            });
+
+            queue
+                .on("queue-complete", function (){ 
+                    assert.deepEqual(output, ["job2", "job3", "job1"]);
+                    done();
+                })
+                .start();
+        });
+
+        it("mixed jobs 2", function(done){
+            var output = [];
+            var queue = new Queue({ name: "test-queue"}),
+                job1 = new GenericJob("job1", false, 50),
+                job2 = new GenericJob("job2", false, 20),
+                job3 = new GenericJob("job3", false, 5);
+            queue.add([ job1, job2, job3 ]);
         
-        job1.on("job-success", function(){
-            console.log("job1 success");
-            output.push(this.name);
+            job1.on("job-complete", function(){
+                output.push(this.name);
+            });
+            job2.on("job-complete", function(){
+                output.push(this.name);
+            });
+            job3.on("job-complete", function(){
+                output.push(this.name);
+            });
+
+            queue
+                .on("queue-complete", function (){ 
+                    assert.deepEqual(output, ["job1", "job2", "job3"]);
+                    done();
+                })
+                .start();
         });
-        job2.on("job-success", function(){
-            console.log("job2 success");
-            output.push(this.name);
-        });
-        job3.on("job-success", function(){
-            console.log("job3 success");
-            output.push(this.name);
-        });
-        
-        queue
-            .on("queue-complete", function(){ 
-                console.log("queue complete");
-                assert.deepEqual(output, ["two", "three", "one"]);
-                done(); 
-            })
-            .start();
-    })
+    });
 });
 
 /**
