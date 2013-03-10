@@ -2,7 +2,10 @@
   "name": "work",
   "version": "0.0.0",
   "description": "",
-  "keywords": ["job", "queue"], 
+  "keywords": [
+    "job",
+    "queue"
+  ],
   "main": "lib/work.js",
   "scripts": {
     "test": "mocha test/*.js --reporter spec"
@@ -12,5 +15,8 @@
     "url": "https://github.com/75lb/work.git"
   },
   "author": "Lloyd Brookes",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "underscore": "~1.4.4"
+  }
 }

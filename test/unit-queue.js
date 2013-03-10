@@ -1,5 +1,7 @@
 var work = require("../lib/work"),
     util = require("util"),
+    _ = require("underscore"),
+    path = require("path"),
     assert = require("assert"),
     Queue = work.Queue,
     Job = work.Job;
@@ -72,7 +74,7 @@ describe("Queue", function(){
         assert.strictEqual(queue.jobs[0].name, "test");
     });
 
-    it("add(jobArray)", function(){
+    it("add(jobOptionsArray)", function(){
         var queue = new Queue({ name: "test" }),
             output = [];
 
@@ -95,11 +97,147 @@ describe("Queue", function(){
             .start();
     });
 
-    it("should be possible to collect stats about the queued jobs", function(){
+    it("add(jobArray)", function(){
+        var queue = new Queue({ name: "test" }),
+            output = [];
+
+        function run(){
+            output.push(1);
+        }
+        
+        queue.add([
+            new Job({ name: "job 1", command: run }),
+            new Job({ name: "job 2", command: run }),
+            new Job({ name: "job 3", command: run })
+        ]);
+        
+        assert.strictEqual(queue.jobs.length, 3);
+        assert.strictEqual(queue.jobs[1].name, "job 2");
+        
+        queue.on("queue-complete", function(){
+                assert.strictEqual(output.length, 3);
+            })
+            .start();
+    });
+
+    it("should be possible to subclass and extend a queue", function(){
        var files = ["one.wmv", "two.avi", "three.avi", "four.mp4", "five.mp4"];
        
+       function TestQueue(options){
+           Queue.call(this, options);
+       }
+       util.inherits(TestQueue, Queue);
+       TestQueue.prototype.distinctExtensions = function(){
+           var exts = [];
+           this.jobs.forEach(function(job){
+               exts.push(path.extname(job.data.file));
+           });
+           return _.uniq(exts);
+       };
+       
+       var testQueue = new TestQueue();
+       
+       files.forEach(function(file){
+           var job = new Job({ name: "test " + file });
+           job.data = { file: file };
+           testQueue.add(job);
+       });
+       
+       assert.deepEqual(testQueue.distinctExtensions(), [ ".wmv", ".avi", ".mp4" ]);
        
     });
+    
+    it("synchronous jobs", function(done){
+        var job1Success = false,
+            job2Success = false;
+            
+        var job1 = new Job({
+            name: "one",
+            command: function(){
+                var self = this;
+                console.log("JOB1");
+                setTimeout(function(){
+                    self.emitSuccess();
+                },100);
+            }
+        });
+        var job2 = new Job({
+            name: "two", 
+            command: function(){
+                console.log("JOB2");
+                this.emitSuccess();
+            }
+        });
+        
+        var queue = new Queue();
+        queue.add([ job1, job2 ]);
+        
+        job1.on("job-success", function(){
+            job1Success = true;
+            assert.strictEqual(job2Success, false);
+        });
+        job2.on("job-success", function(){
+            job2Success = true;
+            assert.strictEqual(job1Success, true);
+        });
+        
+        queue.start()
+            .on("queue-complete", function(){ done(); });
+    })
+    it("asynchronous jobs", function(done){
+        var output = [];
+            
+        var job1 = new Job({
+            name: "one",
+            async: true,
+            command: function(){
+                var self = this;
+                setTimeout(function(){
+                    console.log("JOB1");
+                    self.emitSuccess();
+                },100);
+            }
+        });
+        var job2 = new Job({
+            name: "two", 
+            command: function(){
+                console.log("JOB2");
+                this.emitSuccess();
+            }
+        });
+        var job3 = new Job({
+            name: "three", 
+            async: true,
+            command: function(){
+                console.log("JOB3");
+                this.emitSuccess();
+            }
+        });
+        
+        var queue = new Queue();
+        queue.add([ job1, job2, job3 ]);
+        
+        job1.on("job-success", function(){
+            console.log("job1 success");
+            output.push(this.name);
+        });
+        job2.on("job-success", function(){
+            console.log("job2 success");
+            output.push(this.name);
+        });
+        job3.on("job-success", function(){
+            console.log("job3 success");
+            output.push(this.name);
+        });
+        
+        queue
+            .on("queue-complete", function(){ 
+                console.log("queue complete");
+                assert.deepEqual(output, ["two", "three", "one"]);
+                done(); 
+            })
+            .start();
+    })
 });
 
 /**
