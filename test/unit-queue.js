@@ -13,21 +13,20 @@ function l(msg){
 
 describe("Queue", function(){
     it("queue synopsis", function(){
-        function log(){}
         var queue = new Queue({ name: "Main Queue" })
-            .on("queue-starting", function(state){ log("Queue starting: " + state); })
-            .on("queue-complete", function(state){ log("Queue complete: " + state); })
-            .on("job-starting", function(state){ log("Job starting: " + state); })
-            .on("job-progress", function(state, progress){ 
-                log("Job progress: " + state + progress.percentComplete); 
+            .on("queue-starting", function(queue){ l("Queue starting: " + queue.name); })
+            .on("queue-complete", function(queue){ l("Queue complete: " + queue.name); })
+            .on("job-starting", function(job){ l("Job starting: " + job.name); })
+            .on("job-progress", function(job, progress){ 
+                l("Job progress: " + job.name + progress.percentComplete); 
             })
-            .on("job-complete", function(state){ log("Job complete: " + state); })
-            .on("job-success", function(state){ log("Job success: " + state); })
-            .on("job-fail", function(state){ log("Job fail: " + state); })
-            .on("job-info", function(state, msg){ log("Job info: " + msg + state); })
-            .on("job-warning", function(state, msg){ log("job-warning: " + msg + state); })
-            .on("job-error", function(state, err){ log("job-error: " + state + err); })
-            .on("job-terminated", function(state){ log("job-terminated: " + state); });
+            .on("job-complete", function(job){ l("Job complete: " + job.name); })
+            .on("job-success", function(job){ l("Job success: " + job.name); })
+            .on("job-fail", function(job){ l("Job fail: " + job.name); })
+            .on("job-info", function(job, msg){ l("Job info: " + msg + job.name); })
+            .on("job-warning", function(job, msg){ l("job-warning: " + msg + job.name); })
+            .on("job-error", function(job, err){ l("job-error: " + job.name + err); })
+            .on("job-terminated", function(job){ l("job-terminated: " + job.name); });
 
         ["Dave", "Alan", "Geoff", "Mohammad", "Jesus", "Mandy"].forEach(function(person){
             var job = new Job({
@@ -43,18 +42,14 @@ describe("Queue", function(){
 
             job.onSuccess.add({
                 name: util.format("notify %s of success", person),
-                command: function(){
-                    log("SUCCESS, %s!", person);
-                    this.emitSuccess();
-                }
+                commandSync: l,
+                args: ["SUCCESS, %s!", person]
             });
             
             job.onFail.add({
                 name: util.format("notify %s of failure", person),
-                command: function(){
-                    log("FAILED, %s!", person);
-                    this.emitSuccess();
-                }
+                commandSync: l,
+                args: ["FAILED, %s!", person]
             });
 
             queue.add(job);
@@ -140,7 +135,7 @@ describe("Queue", function(){
            return _.uniq(exts);
        };
        
-       var testQueue = new TestQueue();
+       var testQueue = new TestQueue({ name: "tq" });
        
        files.forEach(function(file){
            var job = new Job({ name: "test " + file });
@@ -152,7 +147,7 @@ describe("Queue", function(){
        
     });
     
-    describe("start() behaviour", function(){
+    describe("start() runs queued jobs in expected order", function(){
         function GenericJob(name, async, time){
             Job.call(this, { 
                 name: name, 
@@ -187,7 +182,7 @@ describe("Queue", function(){
                 }
             });
         
-            var queue = new Queue();
+            var queue = new Queue({ name: "tq" });
             queue.add([ job1, job2 ]);
         
             job1.on("job-success", function(){
@@ -203,7 +198,7 @@ describe("Queue", function(){
                 .on("queue-complete", function(){ done(); });
         })
     
-        it("mixed jobs 1", function(done){
+        it("mixed jobs", function(done){
             var output = [];
             var queue = new Queue({ name: "test-queue"}),
                 job1 = new GenericJob("job1", true, 20),
@@ -229,7 +224,7 @@ describe("Queue", function(){
                 .start();
         });
 
-        it("mixed jobs 2", function(done){
+        it("sync jobs", function(done){
             var output = [];
             var queue = new Queue({ name: "test-queue"}),
                 job1 = new GenericJob("job1", false, 20),
@@ -255,7 +250,7 @@ describe("Queue", function(){
                 .start();
         });
 
-        it("mixed jobs 3", function(done){
+        it("async jobs", function(done){
             var output = [];
             var queue = new Queue({ name: "test-queue"}),
                 job1 = new GenericJob("job1", true, 20),
@@ -281,33 +276,61 @@ describe("Queue", function(){
                 .start();
         });
         
-        // it("mixed jobs with onComplete queues", function(done){
-        //     
-        // })
+        it("sync commands with onComplete queues", function(done){
+            var queue = new Queue({ name: "main" });
+            var completeJobs = [];
+            function register(val){
+                completeJobs.push(val);
+                l(completeJobs);
+            }
+            
+            queue
+                .add([
+                    { 
+                        name: "one", 
+                        commandSync: register, 
+                        args: "1r", 
+                        onSuccess: new Queue({ name: "1oC" }).add({
+                            name: "one completed",
+                            commandSync: register,
+                            args: "1c"
+                        })
+                    },
+                    { 
+                        name: "two", 
+                        commandSync: register, 
+                        args: "2r", 
+                        onSuccess: new Queue({ name: "2oC" }).add({
+                            name: "two completed",
+                            commandSync: register,
+                            args: "2c"
+                        })
+                    }
+                ])
+                .on("queue-starting", function(queue){
+                    register(queue.name + "r");
+                })
+                .on("queue-complete", function(queue){
+                    register(queue.name + "c");
+                    // if (queue.name == "main"){
+                    //     l(completeJobs);
+                    //     done();
+                    // }
+                    // assert.deepEqual(completeJobs, [ 
+                    //     'mainr',
+                    //     '1r', // end of each job, state complete, then check for onComplete queue
+                    //     '1oCr', // start queue
+                    //     '1c', // then check for onComplete jobs
+                    //     '1oCc', // no more jobs
+                    //     '2r',
+                    //     '2oCr',
+                    //     '2c',
+                    //     '2oCc',
+                    //     'mainc'
+                    // ]);
+                })
+                .start();
+            
+        });
     });
 });
-
-/**
-list of jobs
-execution plan
-execute jobs 
- in sequence or 
- a group of jobs in parallel
- 
-[
-    { name: "job 1", command: func }, 
-    { name: "job 2", command: func },
-    { 
-        name: "job 3", 
-        onComplete: [
-            { name: "job 4", command: func, async: true }
-            { name: "job 5", command: func, async: true }
-            { name: "job 6", command: func, async: true }
-        ]
-    },
-    { name: "job 7", command: func, async: true },
-    { name: "job 8", command: func, async: true },
-    { name: "job 8", command: func },
-    { name: "job 8", command: func, async: true }
-]
-*/

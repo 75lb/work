@@ -42,7 +42,7 @@ describe("Job", function(){
     });
     
     it("commandSync() should call emitSuccess automatically if not explicitly called", function(){
-        var job = new Job({ name: "one", commandSync: console.log, args: "testing" });
+        var job = new Job({ name: "one", commandSync: String, args: "test" });
         var successFired = false; 
         job.on("job-success", function(){
             successFired = true;
