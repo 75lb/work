@@ -206,15 +206,13 @@ describe("Queue", function(){
                 job3 = new GenericJob("job3", true, 5);
             queue.add([ job1, job2, job3 ]);
         
-            job1.on("job-complete", function(){
-                output.push(this.name);
-            });
-            job2.on("job-complete", function(){
-                output.push(this.name);
-            });
-            job3.on("job-complete", function(){
-                output.push(this.name);
-            });
+            function register(job){
+                output.push(job.name);
+                l(job.name);
+            }
+            job1.on("job-complete", register );
+            job2.on("job-complete", register );
+            job3.on("job-complete", register );
 
             queue
                 .on("queue-complete", function (){ 
@@ -276,12 +274,11 @@ describe("Queue", function(){
                 .start();
         });
         
-        it("sync commands with onComplete queues", function(done){
+        it("sequentially executed, sync commands with onSuccess queues", function(done){
             var queue = new Queue({ name: "main" });
             var completeJobs = [];
             function register(val){
                 completeJobs.push(val);
-                // l(completeJobs);
             }
             
             queue
@@ -332,7 +329,180 @@ describe("Queue", function(){
                                 'two onSuccess complete',
                                 'two complete',
                                 'main complete' 
-                            ]
+                            ],
+                            completeJobs
+                        );
+                        done();
+                    }
+                })
+                .start();
+        });
+        
+        it("parallel executed, async commands with onSuccess queues", function(done){
+            var queue = new Queue({ name: "main" });
+            var completeJobs = [];
+            function register(val){
+                completeJobs.push(val);
+            }
+            
+            queue
+                .add([
+                    { 
+                        name: "one", 
+                        async: true,
+                        command: function(){ 
+                            var self = this;
+                            setTimeout(function(){
+                                self.emitSuccess();
+                            }, 20)
+                        }, 
+                        onSuccess: new Queue({ name: "one onSuccess" }).add({
+                            name: "one succeeded",
+                            async: true,
+                            command: function(){ 
+                                var self = this;
+                                setTimeout(function(){
+                                    self.emitSuccess();
+                                }, 5)
+                            }, 
+                        })
+                    },
+                    { 
+                        name: "two", 
+                        async: true,
+                        command: function(){ 
+                            var self = this;
+                            setTimeout(function(){
+                                self.emitSuccess();
+                            }, 10)
+                        }, 
+                        onSuccess: new Queue({ name: "two onSuccess" }).add({
+                            name: "two succeeded",
+                            async: true,
+                            command: function(){ 
+                                var self = this;
+                                setTimeout(function(){
+                                    self.emitSuccess();
+                                }, 55)
+                            }, 
+                        })
+                    }
+                ])
+                .on("job-starting", function(job){
+                    register(job.name + " starting");
+                })
+                .on("job-complete", function(job){
+                    register(job.name + " complete");
+                })
+                .on("queue-starting", function(queue){
+                    register(queue.name + " starting");
+                })
+                .on("queue-complete", function(queue){
+                    register(queue.name + " complete");
+                    if (queue.name == "main"){
+                        assert.deepEqual(
+                            completeJobs, 
+                            [ 
+                                'main starting',
+                                'one starting',
+                                'two starting',
+                                'two onSuccess starting',
+                                'two succeeded starting',
+                                'one onSuccess starting',
+                                'one succeeded starting',
+                                'one succeeded complete',
+                                'one onSuccess complete',
+                                'one complete',
+                                'two succeeded complete',
+                                'two onSuccess complete',
+                                'two complete',
+                                'main complete' 
+                            ],
+                            util.inspect(completeJobs)
+                        );
+                        done();
+                    }
+                })
+                .start();
+        });
+
+        it("sequentially executed, async commands with onSuccess queues", function(done){
+            var queue = new Queue({ name: "main" });
+            var completeJobs = [];
+            function register(val){
+                completeJobs.push(val);
+            }
+            
+            queue
+                .add([
+                    { 
+                        name: "one", 
+                        command: function(){ 
+                            var self = this;
+                            setTimeout(function(){
+                                self.emitSuccess();
+                            }, 20)
+                        }, 
+                        onSuccess: new Queue({ name: "one onSuccess" }).add({
+                            name: "one succeeded",
+                            command: function(){ 
+                                var self = this;
+                                setTimeout(function(){
+                                    self.emitSuccess();
+                                }, 5)
+                            }, 
+                        })
+                    },
+                    { 
+                        name: "two", 
+                        command: function(){ 
+                            var self = this;
+                            setTimeout(function(){
+                                self.emitSuccess();
+                            }, 10)
+                        }, 
+                        onSuccess: new Queue({ name: "two onSuccess" }).add({
+                            name: "two succeeded",
+                            command: function(){ 
+                                var self = this;
+                                setTimeout(function(){
+                                    self.emitSuccess();
+                                }, 55)
+                            }, 
+                        })
+                    }
+                ])
+                .on("job-starting", function(job){
+                    register(job.name + " starting");
+                })
+                .on("job-complete", function(job){
+                    register(job.name + " complete");
+                })
+                .on("queue-starting", function(queue){
+                    register(queue.name + " starting");
+                })
+                .on("queue-complete", function(queue){
+                    register(queue.name + " complete");
+                    if (queue.name == "main"){
+                        assert.deepEqual(
+                            completeJobs, 
+                            [ 
+                                'main starting',
+                                'one starting',
+                                'one onSuccess starting',
+                                'one succeeded starting',
+                                'one succeeded complete',
+                                'one onSuccess complete',
+                                'one complete',
+                                'two starting',
+                                'two onSuccess starting',
+                                'two succeeded starting',
+                                'two succeeded complete',
+                                'two onSuccess complete',
+                                'two complete',
+                                'main complete' 
+                            ],
+                            util.inspect(completeJobs)
                         );
                         done();
                     }
