@@ -12,7 +12,7 @@ function l(msg){
 }
 
 describe("Queue", function(){
-    it("queue synopsis", function(){
+    it.skip("queue synopsis", function(){
         var queue = new Queue({ name: "Main Queue" })
             .on("queue-starting", function(queue){ l("Queue starting: " + queue.name); })
             .on("queue-complete", function(queue){ l("Queue complete: " + queue.name); })
@@ -281,56 +281,63 @@ describe("Queue", function(){
             var completeJobs = [];
             function register(val){
                 completeJobs.push(val);
-                l(completeJobs);
+                // l(completeJobs);
             }
             
             queue
                 .add([
                     { 
                         name: "one", 
-                        commandSync: register, 
-                        args: "1r", 
-                        onSuccess: new Queue({ name: "1oC" }).add({
-                            name: "one completed",
-                            commandSync: register,
-                            args: "1c"
+                        commandSync: String, 
+                        onSuccess: new Queue({ name: "one onSuccess" }).add({
+                            name: "one succeeded",
+                            commandSync: String
                         })
                     },
                     { 
                         name: "two", 
-                        commandSync: register, 
-                        args: "2r", 
-                        onSuccess: new Queue({ name: "2oC" }).add({
-                            name: "two completed",
-                            commandSync: register,
-                            args: "2c"
+                        commandSync: String,
+                        onSuccess: new Queue({ name: "two onSuccess" }).add({
+                            name: "two succeeded",
+                            commandSync: String
                         })
                     }
                 ])
+                .on("job-starting", function(job){
+                    register(job.name + " starting");
+                })
+                .on("job-complete", function(job){
+                    register(job.name + " complete");
+                })
                 .on("queue-starting", function(queue){
-                    register(queue.name + "r");
+                    register(queue.name + " starting");
                 })
                 .on("queue-complete", function(queue){
-                    register(queue.name + "c");
-                    // if (queue.name == "main"){
-                    //     l(completeJobs);
-                    //     done();
-                    // }
-                    // assert.deepEqual(completeJobs, [ 
-                    //     'mainr',
-                    //     '1r', // end of each job, state complete, then check for onComplete queue
-                    //     '1oCr', // start queue
-                    //     '1c', // then check for onComplete jobs
-                    //     '1oCc', // no more jobs
-                    //     '2r',
-                    //     '2oCr',
-                    //     '2c',
-                    //     '2oCc',
-                    //     'mainc'
-                    // ]);
+                    register(queue.name + " complete");
+                    if (queue.name == "main"){
+                        assert.deepEqual(
+                            completeJobs, 
+                            [ 
+                                'main starting',
+                                'one starting',
+                                'one onSuccess starting',
+                                'one succeeded starting',
+                                'one succeeded complete',
+                                'one onSuccess complete',
+                                'one complete',
+                                'two starting',
+                                'two onSuccess starting',
+                                'two succeeded starting',
+                                'two succeeded complete',
+                                'two onSuccess complete',
+                                'two complete',
+                                'main complete' 
+                            ]
+                        );
+                        done();
+                    }
                 })
                 .start();
-            
         });
     });
 });
