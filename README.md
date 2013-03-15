@@ -4,8 +4,8 @@ Work
 ====
 Got a thousand jobs to do? Get an execution plan!
 
+```javascript
 var work = require("work");
-```javascript    
 var queue = new work.Queue({ name: "housework" }).add([
     {
         name: "play music", 
@@ -16,7 +16,7 @@ var queue = new work.Queue({ name: "housework" }).add([
     { 
         name: "dishes", 
         command: wash, 
-        args: [ pots, pans, cuttlery ],
+        args: [ pots, pans, cutlery ],
         onProgress: changeMusic,
         onSuccess: {
             name: "wipe worktops",
