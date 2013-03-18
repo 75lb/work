@@ -4,10 +4,10 @@ Work
 ====
 Got a thousand jobs to do? Get an execution plan!
 
-Create one of more instances of `Job`, specifying the name, command, arguments and whether the job may run in parallel to others. Add each `Job` to a `Queue` for execution in the order provided. Each `Job` can have a sub-Queue to be executed on success or failure, each Queue containing its own list of Jobs - and so the hierarchy grows! 
+Create one of more instances of `Job`, specifying the `name`, `command`, `arguments` and whether the job may run in `parallel` to others. Add each `Job` to a `Queue` for execution in the order provided. Each `Job` can have sub-queues to be executed `onSuccess`, `onProgress` or `onFailure`, each of which contains its own list of Jobs. And so the hierarchy grows! Work can also project a dashboard, providing real-time progress information on any standard Node.js <a href="http://nodejs.org/api/stream.html">Stream</a>. 
 
+```javascript
 var work = require("work");
-```javascript    
 var queue = new work.Queue({ name: "housework" }).add([
     {
         name: "play music", 
@@ -18,7 +18,7 @@ var queue = new work.Queue({ name: "housework" }).add([
     { 
         name: "dishes", 
         command: wash, 
-        args: [ pots, pans, cuttlery ],
+        args: [ pots, pans, cutlery ],
         onProgress: changeMusic,
         onSuccess: {
             name: "wipe worktops",
