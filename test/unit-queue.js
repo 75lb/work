@@ -208,7 +208,6 @@ describe("Queue", function(){
         
             function register(job){
                 output.push(job.name);
-                l(job.name);
             }
             job1.on("job-complete", register );
             job2.on("job-complete", register );
