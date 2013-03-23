@@ -56,95 +56,95 @@ describe("Queue", function(){
         });
 
         queue.start();
-   });
-
-    it("add(job)", function(){
-        var queue = new Queue({ name: "test" });
-        queue.add(new Job({ name: "test" }));
-        
-        assert.strictEqual(queue.jobs.length, 1);
-        assert.strictEqual(queue.jobs[0].name, "test");        
     });
-
-    it("add(jobOptions)", function(){
-        var queue = new Queue({ name: "test" });
-        queue.add({ name: "test" });
-        
-        assert.strictEqual(queue.jobs.length, 1);
-        assert.strictEqual(queue.jobs[0].name, "test");
-    });
-
-    it("add(jobOptionsArray)", function(){
-        var queue = new Queue({ name: "test" }),
-            output = [];
-
-        function run(){
-            output.push(1);
-        }
-        
-        queue.add([
-            { name: "job 1", command: run },
-            { name: "job 2", command: run },
-            { name: "job 3", command: run }
-        ]);
-        
-        assert.strictEqual(queue.jobs.length, 3);
-        assert.strictEqual(queue.jobs[1].name, "job 2");
-        
-        queue.on("queue-complete", function(){
-                assert.strictEqual(output.length, 3);
-            })
-            .start();
-    });
-
-    it("add(jobArray)", function(){
-        var queue = new Queue({ name: "test" }),
-            output = [];
-
-        function run(){
-            output.push(1);
-        }
-        
-        queue.add([
-            new Job({ name: "job 1", command: run }),
-            new Job({ name: "job 2", command: run }),
-            new Job({ name: "job 3", command: run })
-        ]);
-        
-        assert.strictEqual(queue.jobs.length, 3);
-        assert.strictEqual(queue.jobs[1].name, "job 2");
-        
-        queue.on("queue-complete", function(){
-                assert.strictEqual(output.length, 3);
-            })
-            .start();
-    });
-
+   
     it("should be possible to subclass and extend a queue", function(){
-       var files = ["one.wmv", "two.avi", "three.avi", "four.mp4", "five.mp4"];
-       
-       function TestQueue(options){
-           Queue.call(this, options);
-       }
-       util.inherits(TestQueue, Queue);
-       TestQueue.prototype.distinctExtensions = function(){
-           var exts = [];
-           this.jobs.forEach(function(job){
-               exts.push(path.extname(job.data.file));
-           });
-           return _.uniq(exts);
-       };
-       
-       var testQueue = new TestQueue({ name: "tq" });
-       
-       files.forEach(function(file){
-           var job = new Job({ name: "test " + file });
-           job.data = { file: file };
-           testQueue.add(job);
-       });
-       
-       assert.deepEqual(testQueue.distinctExtensions(), [ ".wmv", ".avi", ".mp4" ]);
-       
+        var files = ["one.wmv", "two.avi", "three.avi", "four.mp4", "five.mp4"];
+
+        function TestQueue(options){
+          Queue.call(this, options);
+        }
+        util.inherits(TestQueue, Queue);
+        TestQueue.prototype.distinctExtensions = function(){
+          var exts = [];
+          this.jobs.forEach(function(job){
+              exts.push(path.extname(job.data.file));
+          });
+          return _.uniq(exts);
+        };
+
+        var testQueue = new TestQueue({ name: "tq" });
+
+        files.forEach(function(file){
+          var job = new Job({ name: "test " + file });
+          job.data = { file: file };
+          testQueue.add(job);
+        });
+
+        assert.deepEqual(testQueue.distinctExtensions(), [ ".wmv", ".avi", ".mp4" ]);
+    });
+   
+    describe("add", function(){
+        it("add(job)", function(){
+            var queue = new Queue({ name: "test" });
+            queue.add(new Job({ name: "test" }));
+
+            assert.strictEqual(queue.jobs.length, 1);
+            assert.strictEqual(queue.jobs[0].name, "test");        
+        });
+
+        it("add(jobOptions)", function(){
+            var queue = new Queue({ name: "test" });
+            queue.add({ name: "test" });
+
+            assert.strictEqual(queue.jobs.length, 1);
+            assert.strictEqual(queue.jobs[0].name, "test");
+        });
+
+        it("add(jobOptionsArray)", function(){
+            var queue = new Queue({ name: "test" }),
+               output = [];
+
+            function run(){
+               output.push(1);
+            }
+
+            queue.add([
+               { name: "job 1", command: run },
+               { name: "job 2", command: run },
+               { name: "job 3", command: run }
+            ]);
+
+            assert.strictEqual(queue.jobs.length, 3);
+            assert.strictEqual(queue.jobs[1].name, "job 2");
+
+            queue.on("queue-complete", function(){
+                assert.strictEqual(output.length, 3);
+            }).start();
+        });
+
+        it("add(jobArray)", function(){
+            var queue = new Queue({ name: "test" }),
+               output = [];
+
+            function run(){
+               output.push(1);
+            }
+
+            queue.add([
+               new Job({ name: "job 1", command: run }),
+               new Job({ name: "job 2", command: run }),
+               new Job({ name: "job 3", command: run })
+            ]);
+
+            assert.strictEqual(queue.jobs.length, 3);
+            assert.strictEqual(queue.jobs[1].name, "job 2");
+
+            queue.on("queue-complete", function(){
+                   assert.strictEqual(output.length, 3);
+               })
+               .start();
+        });
     });
     
     describe("start() runs queued jobs in expected order", function(){
@@ -201,8 +201,8 @@ describe("Queue", function(){
         it("mixed jobs", function(done){
             var output = [];
             var queue = new Queue({ name: "test-queue"}),
-                job1 = new GenericJob("job1", true, 20),
-                job2 = new GenericJob("job2", false, 10),
+                job1 = new GenericJob("job1", true, 40),
+                job2 = new GenericJob("job2", false, 20),
                 job3 = new GenericJob("job3", true, 5);
             queue.add([ job1, job2, job3 ]);
         
@@ -441,7 +441,7 @@ describe("Queue", function(){
                             setTimeout(function(){
                                 self.emitSuccess();
                             }, 20)
-                        }, 
+                        },
                         onSuccess: new Queue({ name: "one onSuccess" }).add({
                             name: "one succeeded",
                             command: function(){ 
@@ -509,4 +509,50 @@ describe("Queue", function(){
                 .start();
         });
     });
+    
+    describe.only("parent, previous, next and return values", function(){
+        it("access return value of parent job", function(){
+            var queue = new Queue({name: "queue"});
+            var result = "";
+            
+            queue.add([
+                { 
+                    name: "job1", 
+                    commandSync: function(a){ return a; }, 
+                    args: "job1",
+                    onSuccess: new Queue({ name: "what" }).add(
+                        {
+                            name: "job2", 
+                            commandSync: function(){ 
+                                result = this.parent.parent.retVal; 
+                            }
+                        }
+                    )
+                },
+            ]);
+            queue.start();
+            assert.strictEqual(result, "job1");
+        });
+
+        it("access return value of previous sibling job", function(){
+            var queue = new Queue({name: "queue"}),
+                result = "";
+            
+            queue.add([
+                { 
+                    name: "job1",
+                    commandSync: function(a){ return a; }, 
+                    args: "job1",
+                },
+                { 
+                    name: "job2", 
+                    commandSync: function(){ result = this.previous.retVal; },
+                }
+            ]);
+            
+            queue.start();
+            assert.strictEqual(result, "job1");
+        });
+        
+    })
 });
