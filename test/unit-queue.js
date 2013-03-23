@@ -148,10 +148,10 @@ describe("Queue", function(){
     });
     
     describe("start() runs queued jobs in expected order", function(){
-        function GenericJob(name, async, time){
+        function GenericJob(name, parallel, time){
             Job.call(this, { 
                 name: name, 
-                async: async,
+                parallel: parallel,
                 command: function(){
                     var self = this;
                     setTimeout(function(){
@@ -247,7 +247,7 @@ describe("Queue", function(){
                 .start();
         });
 
-        it("async jobs", function(done){
+        it("parallel jobs", function(done){
             var output = [];
             var queue = new Queue({ name: "test-queue"}),
                 job1 = new GenericJob("job1", true, 20),
@@ -337,7 +337,7 @@ describe("Queue", function(){
                 .start();
         });
         
-        it("parallel executed, async commands with onSuccess queues", function(done){
+        it("parallel executed, parallel commands with onSuccess queues", function(done){
             var queue = new Queue({ name: "main" });
             var completeJobs = [];
             function register(val){
@@ -348,7 +348,7 @@ describe("Queue", function(){
                 .add([
                     { 
                         name: "one", 
-                        async: true,
+                        parallel: true,
                         command: function(){ 
                             var self = this;
                             setTimeout(function(){
@@ -357,7 +357,7 @@ describe("Queue", function(){
                         }, 
                         onSuccess: new Queue({ name: "one onSuccess" }).add({
                             name: "one succeeded",
-                            async: true,
+                            parallel: true,
                             command: function(){ 
                                 var self = this;
                                 setTimeout(function(){
@@ -368,7 +368,7 @@ describe("Queue", function(){
                     },
                     { 
                         name: "two", 
-                        async: true,
+                        parallel: true,
                         command: function(){ 
                             var self = this;
                             setTimeout(function(){
@@ -377,7 +377,7 @@ describe("Queue", function(){
                         }, 
                         onSuccess: new Queue({ name: "two onSuccess" }).add({
                             name: "two succeeded",
-                            async: true,
+                            parallel: true,
                             command: function(){ 
                                 var self = this;
                                 setTimeout(function(){
@@ -425,7 +425,7 @@ describe("Queue", function(){
                 .start();
         });
 
-        it("sequentially executed, async commands with onSuccess queues", function(done){
+        it("sequentially executed, parallel commands with onSuccess queues", function(done){
             var queue = new Queue({ name: "main" });
             var completeJobs = [];
             function register(val){
@@ -510,7 +510,7 @@ describe("Queue", function(){
         });
     });
     
-    describe.only("parent, previous, next and return values", function(){
+    describe("parent, previous, next and return values", function(){
         it("access return value of parent job", function(){
             var queue = new Queue({name: "queue"});
             var result = "";
