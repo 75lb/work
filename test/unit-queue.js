@@ -7,8 +7,7 @@ var work = require("../lib/work"),
     Job = work.Job;
 
 function l(msg){
-    var args = Array.prototype.slice.call(arguments);
-    console.log.apply(this, args);
+    console.log.apply(this, Array.prototype.slice.call(arguments));
 }
 
 describe("Queue", function(){
