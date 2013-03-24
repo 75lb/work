@@ -28,140 +28,152 @@ fontsize=16
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>490</x>
-      <y>260</y>
-      <w>140</w>
-      <h>130</h>
+      <x>360</x>
+      <y>800</y>
+      <w>300</w>
+      <h>50</h>
     </coordinates>
-    <panel_attributes>lt=-
-r1=next
-</panel_attributes>
-    <additional_attributes>30;70;30;110;120;110;120;30;70;30</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Interface</type>
-    <coordinates>
-      <x>720</x>
-      <y>70</y>
-      <w>80</w>
-      <h>130</h>
-    </coordinates>
-    <panel_attributes>Traverse
---
-parent
-previous
-next
-</panel_attributes>
-    <additional_attributes/>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+r1=children
+m2=*
+r2=parent
+m1=0..1</panel_attributes>
+    <additional_attributes>280;30;30;30</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>210</x>
-      <y>90</y>
-      <w>190</w>
-      <h>50</h>
+      <x>390</x>
+      <y>650</y>
+      <w>410</w>
+      <h>130</h>
     </coordinates>
-    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
-r1=onSuccess
-</panel_attributes>
-    <additional_attributes>170;30;30;30</additional_attributes>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>30;30;30;70;390;70;390;110</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>50</x>
-      <y>70</y>
+      <x>370</x>
+      <y>0</y>
       <w>190</w>
-      <h>260</h>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>EventEmitter
+--
+--
+on()
+off()
+emit()
+etc.</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>80</x>
+      <y>760</y>
+      <w>310</w>
+      <h>310</h>
     </coordinates>
     <panel_attributes>Queue
 --
-name</panel_attributes>
+--
+add()
+start()
+&lt;&lt;event&gt;&gt; queue-starting (queue)
+&lt;&lt;event&gt;&gt; queue-complete (queue)
+&lt;&lt;event&gt;&gt; job-starting (job)
+&lt;&lt;event&gt;&gt; job-progress (job, progress)
+&lt;&lt;event&gt;&gt; job-success (job, retVal)
+&lt;&lt;event&gt;&gt; job-fail (job, retVal)
+&lt;&lt;event&gt;&gt; job-terminate (job)
+&lt;&lt;event&gt;&gt; job-complete (job, retVal)
+&lt;&lt;event&gt;&gt; job-info (job, msg)
+&lt;&lt;event&gt;&gt; job-warning (job, msg)
+&lt;&lt;event&gt;&gt; job-error (job, err)
+</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>210</x>
-      <y>180</y>
-      <w>190</w>
-      <h>50</h>
+      <x>440</x>
+      <y>120</y>
+      <w>50</w>
+      <h>110</h>
     </coordinates>
-    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
-r1=jobs</panel_attributes>
-    <additional_attributes>30;30;170;30</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>210</x>
-      <y>130</y>
-      <w>190</w>
-      <h>50</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
-r1=onFail
-</panel_attributes>
-    <additional_attributes>170;30;30;30</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>210</x>
-      <y>280</y>
-      <w>190</w>
-      <h>50</h>
-    </coordinates>
-    <panel_attributes>lt=-
-r1=parent
-</panel_attributes>
-    <additional_attributes>170;30;30;30</additional_attributes>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>30;30;30;90</additional_attributes>
   </element>
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>380</x>
-      <y>70</y>
-      <w>180</w>
-      <h>260</h>
+      <x>640</x>
+      <y>760</y>
+      <w>320</w>
+      <h>310</h>
     </coordinates>
     <panel_attributes>Job
 --
-name
 command
 commandSync
 args
 data
 parallel
 retVal
-queuePosition</panel_attributes>
+--
+run()
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>320</x>
+      <y>210</y>
+      <w>330</w>
+      <h>470</h>
+    </coordinates>
+    <panel_attributes>Traversable
+--
+name: String
+childIndex
+parent: Object
+children: Array
+previous: Object
+next: Object
+state
+  running
+  timer
+  complete
+--
+&lt;&lt;event&gt;&gt; starting (this)
+&lt;&lt;event&gt;&gt; progress (this, progress)
+&lt;&lt;event&gt;&gt; success (this, returnVal)
+&lt;&lt;event&gt;&gt; fail (this, returnVal)
+&lt;&lt;event&gt;&gt; terminate (this)
+&lt;&lt;event&gt;&gt; complete (this, returnVal)
+&lt;&lt;event&gt;&gt; info (this, msg)
+&lt;&lt;event&gt;&gt; warning (this, msg)
+&lt;&lt;event&gt;&gt; error (this, err)
+
+</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>470</x>
-      <y>0</y>
-      <w>160</w>
-      <h>120</h>
-    </coordinates>
-    <panel_attributes>lt=-
-r1=previous
-</panel_attributes>
-    <additional_attributes>50;70;50;30;140;30;140;100;90;100</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>210</x>
-      <y>240</y>
-      <w>190</w>
+      <x>360</x>
+      <y>870</y>
+      <w>300</w>
       <h>50</h>
     </coordinates>
-    <panel_attributes>lt=-
-r1=parent
-</panel_attributes>
-    <additional_attributes>30;30;170;30</additional_attributes>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+r1=children
+m2=*
+r2=parent
+m1=0..1</panel_attributes>
+    <additional_attributes>30;30;280;30</additional_attributes>
   </element>
 </diagram>

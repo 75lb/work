@@ -556,4 +556,17 @@ describe("Queue", function(){
         
     })
     
+    describe("monitoring", function(){
+        var queue;
+
+        before(function(){
+            queue = new Queue({ name: "monitoring" }).add([
+                {}
+            ]);
+            
+        });
+        it("should fire 'changed' if an object in the tree is updated", function(){
+            
+        });
+    });
 });
