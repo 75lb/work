@@ -10,7 +10,7 @@ Create one of more instances of `Job`, specifying the `name`, `command`, `argume
 
 ```javascript
 var work = require("work");
-var queue = new work.Queue({ name: "housework" }).add([
+var housework = new work.Job({ name: "housework" }).add([
     {
         name: "play music", 
         parallel: true,
@@ -18,31 +18,42 @@ var queue = new work.Queue({ name: "housework" }).add([
         args: "Al Green"
     },
     { 
-        name: "dishes", 
-        command: wash, 
+        name: "dishes",
+        command: wash,
         args: [ pots, pans, cutlery ],
-        onProgress: changeMusic,
-        onSuccess: {
-            name: "wipe worktops",
-            command: wash,
-            args: [ worktops ],
-            onSuccess: {
-                name: "procrastinate",
-                command: "postFacebookStatus",
-                args: "I'm a model parent and my kids are clever. "
+        children: [
+            {
+                name: "change music",
+                runOn: "progress"
+                commandSync: function(){
+                    // half way through washing the dishes
+                    if (this.parent.progress.percentComplete == 50){
+                        launchPlaylist("Metal");
+                    }
+                }
+            },
+            {
+                name: "wipe worktops",
+                runOn: "complete",
+                command: wash,
+                args: [ worktops ],
+                onSuccess: {
+                    name: "procrastinate",
+                    command: "postFacebookStatus",
+                    args: "I'm a model parent and my kids are clever. "
+                }
             }
-        }
+        ]
     },
     {
         name: "mop floor",
         command: wash,
-        args: [ kitchenFloor, hallFloor ],
-        onProgress: changeMusic
+        args: [ kitchenFloor, hallFloor ]
     }
 ]);
 
-// use stdout as the real-time dashboard displaying queue progress
-queue.viewport(process.stdout).start();
+// get to work, monitoring progress on stdout
+queue.monitor(process.stdout).start();
 ```
 
 Install
