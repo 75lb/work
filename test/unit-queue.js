@@ -15,8 +15,18 @@ var findNewJob = new Job({
 [1,2,3,4,5,6,7,8,9,10].forEach(function(index){
     findNewJob.add({
         name: "job application",
-        commandSync: function(){
-            l("applying for job number " + index)
+        command: function(){
+            var self = this, 
+                delay = 500-(index*20);
+            l("applying for job number: %d, delay: %d", index, delay);
+            setTimeout(function(){
+                l(delay);
+                if (parseInt(Math.random()*2)){
+                    self.success();
+                } else {
+                    self.fail();
+                }
+            }, delay);
         },
         children: [
             {
@@ -33,6 +43,10 @@ var findNewJob = new Job({
             }
         ]
     });
+});
+
+findNewJob.on("complete", function(){
+    l("queue complete");
 });
 
 findNewJob.run();
