@@ -2,12 +2,10 @@
 
 Work
 ====
+Got a thousand jobs to do? Get an execution plan! Work provides a means to build a hierarchy of jobs, executed in the order, and with the strategy provided. Build your own dashboard to monitor events / progress or use the one built it. Work makes use of the [Composite Pattern](http://en.wikipedia.org/wiki/Composite_pattern).
+
 Synopsis
 --------
-Got a thousand jobs to do? Get an execution plan!
-
-Create one of more instances of `Job`, specifying the `name`, `command`, `arguments` and whether the job may run in `parallel` to others. Add each `Job` to a `Queue` for execution in the order provided. Each `Job` can have sub-queues to be executed `onSuccess`, `onProgress` or `onFailure`, each of which contains its own list of Jobs. And so the hierarchy grows! Work can also project a dashboard, providing real-time progress information on any standard Node.js <a href="http://nodejs.org/api/stream.html">Stream</a>. 
-
 ```javascript
 var work = require("work");
 var housework = new work.Job({ name: "housework" }).add([
