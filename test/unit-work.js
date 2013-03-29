@@ -9,6 +9,8 @@ function l(msg){
     console.log.apply(this, Array.prototype.slice.call(arguments));
 }
 
+it("add() should refuse to add duplicate");
+
 describe("Job", function(){
     describe("add", function(){
         it("add(job)", function(){
