@@ -71,7 +71,7 @@ describe("Job", function(){
         });
     });
     
-    describe("run() runs jobs in expected order", function(){
+    describe("jobs run() in expected order", function(){
         function GenericJob(name, parallel, time){
             Job.call(this, { 
                 name: name, 
@@ -130,12 +130,6 @@ describe("Job", function(){
 
         it("parallel jobs", function(done){
             var output = [];
-            var main = new Job({ name: "main" }),
-                job1 = new GenericJob("job1", true, 40),
-                job2 = new GenericJob("job2", true, 20),
-                job3 = new GenericJob("job3", true, 5);
-            main.add([ job1, job2, job3 ]);
-        
             function register(job){
                 output.push(job.name);
                 if(output.length === 4){
@@ -143,19 +137,31 @@ describe("Job", function(){
                     done();
                 }
             }
+
+            var main = new Job({ name: "main" }),
+                job1 = new GenericJob("job1", true, 40),
+                job2 = new GenericJob("job2", true, 20),
+                job3 = new GenericJob("job3", true, 5);
+            main.add([ job1, job2, job3 ]);
+        
             job1.on("complete", register);
             job2.on("complete", register);
             job3.on("complete", register);
             main.on("complete", register).run();
         });
         
-        it("sequential, sync commands with children", function(done){
-            var main = new Job({ name: "main" });
-            var completeJobs = [];
-            function register(val){
-                completeJobs.push(val);
+        it("monitoring sequential, sync commands with children", function(done){
+            var output = [];
+            function register(job){
+                // l(job.name);
+                output.push(job.name);
+                if(output.length === 5){
+                    assert.deepEqual(output, ["main", "one", "one child", "two", "two child"]);
+                    done();
+                }
             }
             
+            var main = new Job({ name: "main" });
             main.add([
                 { 
                     name: "one", 
@@ -175,45 +181,16 @@ describe("Job", function(){
                 }
             ]);
             
-            main.on("monitor", register);
+            main.on("monitor", function(job, eventName){
+                // l(job.name + ", " + eventName);
+                if (eventName == "complete"){
+                    register(job);
+                }
+                if (eventName == "error"){
+                    l(job.errors);
+                }
+            });
             main.run();
-            
-                // .on("starting", function(job){
-                //     register(job.name + " starting");
-                // })
-                // .on("complete", function(job){
-                //     register(job.name + " complete");
-                // })
-                // .on("starting", function(queue){
-                //     register(queue.name + " starting");
-                // })
-                // .on("complete", function(queue){
-                //     register(queue.name + " complete");
-                //     if (queue.name == "main"){
-                //         assert.deepEqual(
-                //             completeJobs, 
-                //             [ 
-                //                 'main starting',
-                //                 'one starting',
-                //                 'one onSuccess starting',
-                //                 'one succeeded starting',
-                //                 'one succeeded complete',
-                //                 'one onSuccess complete',
-                //                 'one complete',
-                //                 'two starting',
-                //                 'two onSuccess starting',
-                //                 'two succeeded starting',
-                //                 'two succeeded complete',
-                //                 'two onSuccess complete',
-                //                 'two complete',
-                //                 'main complete' 
-                //             ],
-                //             completeJobs
-                //         );
-                //         done();
-                //     }
-                // })
-                // .run();
         });
         
         it("parallel executed, parallel commands with onSuccess queues", function(done){
