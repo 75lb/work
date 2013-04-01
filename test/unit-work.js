@@ -10,6 +10,7 @@ function l(msg){
 }
 
 it("add() should refuse to add duplicate");
+it("a child should correctly runOn");
 
 describe("Job", function(){
     describe("add", function(){
@@ -85,46 +86,6 @@ describe("Job", function(){
         }
         util.inherits(GenericJob, Job);
         
-        it("sequential jobs", function(done){
-            var job1Success = false,
-                job2Success = false,
-                output = [];
-            
-            function register(job){
-                output.push(job.name);
-                if(output.length === 3){
-                    assert.deepEqual(output, [ "main", "one", "two" ]);
-                    done();
-                }
-            }
-        
-            var job1 = new Job({
-                name: "one",
-                command: function(){
-                    var self = this;
-                    setTimeout(function(){
-                        self.success();
-                    },20);
-                }
-            });
-            var job2 = new Job({
-                name: "two", 
-                command: function(){
-                    this.success();
-                }
-            });
-        
-            var main = new Job({ 
-                name: "main",
-                children: [ job1, job2 ]
-            });
-        
-            main.on("complete", register);
-            job1.on("complete", register);
-            job2.on("complete", register);
-            main.run();
-        })
-    
         it("mixed sequential and parallel jobs", function(done){
             var output = [];
             var main = new Job({ name: "main"}),
@@ -146,120 +107,113 @@ describe("Job", function(){
             main.on("complete", register).run();
         });
 
-        it("sync jobs", function(done){
+        it("sequential jobs", function(done){
             var output = [];
-            var queue = new Job({ name: "test-queue"}),
-                job1 = new GenericJob("job1", false, 20),
-                job2 = new GenericJob("job2", false, 10),
+            var main = new Job({ name: "main"}),
+                job1 = new GenericJob("job1", false, 40),
+                job2 = new GenericJob("job2", false, 20),
                 job3 = new GenericJob("job3", false, 5);
-            queue.add([ job1, job2, job3 ]);
+            main.add([ job1, job2, job3 ]);
         
-            job1.on("complete", function(){
-                output.push(this.name);
-            });
-            job2.on("complete", function(){
-                output.push(this.name);
-            });
-            job3.on("complete", function(){
-                output.push(this.name);
-            });
-
-            queue
-                .on("complete", function (){ 
-                    assert.deepEqual(output, ["job1", "job2", "job3"]);
+            function register(job){
+                output.push(job.name);
+                if(output.length === 4){
+                    assert.deepEqual(output, ["main", "job1", "job2", "job3"]);
                     done();
-                })
-                .run();
+                }
+            }
+            job1.on("complete", register);
+            job2.on("complete", register);
+            job3.on("complete", register);
+            main.on("complete", register).run();
         });
 
         it("parallel jobs", function(done){
             var output = [];
-            var queue = new Job({ name: "test-queue"}),
-                job1 = new GenericJob("job1", true, 20),
-                job2 = new GenericJob("job2", true, 10),
+            var main = new Job({ name: "main" }),
+                job1 = new GenericJob("job1", true, 40),
+                job2 = new GenericJob("job2", true, 20),
                 job3 = new GenericJob("job3", true, 5);
-            queue.add([ job1, job2, job3 ]);
+            main.add([ job1, job2, job3 ]);
         
-            job1.on("complete", function(){
-                output.push(this.name);
-            });
-            job2.on("complete", function(){
-                output.push(this.name);
-            });
-            job3.on("complete", function(){
-                output.push(this.name);
-            });
-
-            queue
-                .on("complete", function (){ 
-                    assert.deepEqual(output, ["job3", "job2", "job1"]);
+            function register(job){
+                output.push(job.name);
+                if(output.length === 4){
+                    assert.deepEqual(output, ["main", "job3", "job2", "job1"]);
                     done();
-                })
-                .run();
+                }
+            }
+            job1.on("complete", register);
+            job2.on("complete", register);
+            job3.on("complete", register);
+            main.on("complete", register).run();
         });
         
-        it("sequentially executed, sync commands with onSuccess queues", function(done){
-            var queue = new Job({ name: "main" });
+        it("sequential, sync commands with children", function(done){
+            var main = new Job({ name: "main" });
             var completeJobs = [];
             function register(val){
                 completeJobs.push(val);
             }
             
-            queue
-                .add([
-                    { 
-                        name: "one", 
-                        commandSync: String, 
-                        onSuccess: new Job({ name: "one onSuccess" }).add({
-                            name: "one succeeded",
-                            commandSync: String
-                        })
-                    },
-                    { 
-                        name: "two", 
-                        commandSync: String,
-                        onSuccess: new Job({ name: "two onSuccess" }).add({
-                            name: "two succeeded",
-                            commandSync: String
-                        })
-                    }
-                ])
-                .on("starting", function(job){
-                    register(job.name + " starting");
-                })
-                .on("complete", function(job){
-                    register(job.name + " complete");
-                })
-                .on("starting", function(queue){
-                    register(queue.name + " starting");
-                })
-                .on("complete", function(queue){
-                    register(queue.name + " complete");
-                    if (queue.name == "main"){
-                        assert.deepEqual(
-                            completeJobs, 
-                            [ 
-                                'main starting',
-                                'one starting',
-                                'one onSuccess starting',
-                                'one succeeded starting',
-                                'one succeeded complete',
-                                'one onSuccess complete',
-                                'one complete',
-                                'two starting',
-                                'two onSuccess starting',
-                                'two succeeded starting',
-                                'two succeeded complete',
-                                'two onSuccess complete',
-                                'two complete',
-                                'main complete' 
-                            ],
-                            completeJobs
-                        );
-                        done();
-                    }
-                })
-                .run();
+            main.add([
+                { 
+                    name: "one", 
+                    commandSync: String, 
+                    children: [{
+                        name: "one child",
+                        commandSync: String
+                    }]
+                },
+                { 
+                    name: "two", 
+                    commandSync: String,
+                    children: [{
+                        name: "two child",
+                        commandSync: String
+                    }]
+                }
+            ]);
+            
+            main.on("monitor", register);
+            main.run();
+            
+                // .on("starting", function(job){
+                //     register(job.name + " starting");
+                // })
+                // .on("complete", function(job){
+                //     register(job.name + " complete");
+                // })
+                // .on("starting", function(queue){
+                //     register(queue.name + " starting");
+                // })
+                // .on("complete", function(queue){
+                //     register(queue.name + " complete");
+                //     if (queue.name == "main"){
+                //         assert.deepEqual(
+                //             completeJobs, 
+                //             [ 
+                //                 'main starting',
+                //                 'one starting',
+                //                 'one onSuccess starting',
+                //                 'one succeeded starting',
+                //                 'one succeeded complete',
+                //                 'one onSuccess complete',
+                //                 'one complete',
+                //                 'two starting',
+                //                 'two onSuccess starting',
+                //                 'two succeeded starting',
+                //                 'two succeeded complete',
+                //                 'two onSuccess complete',
+                //                 'two complete',
+                //                 'main complete' 
+                //             ],
+                //             completeJobs
+                //         );
+                //         done();
+                //     }
+                // })
+                // .run();
         });
         
         it("parallel executed, parallel commands with onSuccess queues", function(done){

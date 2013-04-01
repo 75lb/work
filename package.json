@@ -19,6 +19,7 @@
   "dependencies": {
     "underscore": "~1.4.4",
     "nature": "~0.0.2",
-    "timepiece": "~0.0.1"
+    "timepiece": "~0.0.1",
+    "ansi": "~0.1.2"
   }
 }
