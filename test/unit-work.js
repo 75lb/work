@@ -182,7 +182,6 @@ describe("Job", function(){
             ]);
             
             main.on("monitor", function(job, eventName){
-                // l(job.name + ", " + eventName);
                 if (eventName == "complete"){
                     register(job);
                 }
@@ -193,92 +192,71 @@ describe("Job", function(){
             main.run();
         });
         
-        it("parallel executed, parallel commands with onSuccess queues", function(done){
-            var queue = new Job({ name: "main" });
+        it.only("monitoring parallel executed, parallel commands with onSuccess children", function(done){
+            var main = new Job({ name: "main" });
             var completeJobs = [];
-            function register(val){
-                completeJobs.push(val);
+            function register(job){
+                // l(job.name);
+                completeJobs.push(job.name);
             }
             
-            queue
-                .add([
-                    { 
-                        name: "one", 
+            main.add([
+                { 
+                    name: "one", 
+                    parallel: true,
+                    command: function(){ 
+                        var self = this;
+                        setTimeout(function(){
+                            self.success();
+                        }, 20)
+                    }, 
+                    children: {
+                        name: "one succeeded",
+                        runOn: "success",
                         parallel: true,
                         command: function(){ 
                             var self = this;
                             setTimeout(function(){
                                 self.success();
-                            }, 20)
+                            }, 5)
                         }, 
-                        onSuccess: new Job({ name: "one onSuccess" }).add({
-                            name: "one succeeded",
-                            parallel: true,
-                            command: function(){ 
-                                var self = this;
-                                setTimeout(function(){
-                                    self.success();
-                                }, 5)
-                            }, 
-                        })
-                    },
-                    { 
-                        name: "two", 
+                    }
+                },
+                { 
+                    name: "two", 
+                    parallel: true,
+                    command: function(){ 
+                        var self = this;
+                        setTimeout(function(){
+                            self.success();
+                        }, 10)
+                    }, 
+                    children: {
+                        name: "two succeeded",
+                        runOn: "success",
                         parallel: true,
                         command: function(){ 
                             var self = this;
                             setTimeout(function(){
                                 self.success();
-                            }, 10)
+                            }, 55)
                         }, 
-                        onSuccess: new Job({ name: "two onSuccess" }).add({
-                            name: "two succeeded",
-                            parallel: true,
-                            command: function(){ 
-                                var self = this;
-                                setTimeout(function(){
-                                    self.success();
-                                }, 55)
-                            }, 
-                        })
                     }
-                ])
-                .on("starting", function(job){
-                    register(job.name + " starting");
-                })
-                .on("complete", function(job){
-                    register(job.name + " complete");
-                })
-                .on("starting", function(queue){
-                    register(queue.name + " starting");
-                })
-                .on("complete", function(queue){
-                    register(queue.name + " complete");
-                    if (queue.name == "main"){
-                        assert.deepEqual(
-                            completeJobs, 
-                            [ 
-                                'main starting',
-                                'one starting',
-                                'two starting',
-                                'two onSuccess starting',
-                                'two succeeded starting',
-                                'one onSuccess starting',
-                                'one succeeded starting',
-                                'one succeeded complete',
-                                'one onSuccess complete',
-                                'one complete',
-                                'two succeeded complete',
-                                'two onSuccess complete',
-                                'two complete',
-                                'main complete' 
-                            ],
-                            util.inspect(completeJobs)
-                        );
-                        done();
-                    }
-                })
-                .run();
+                }
+            ])
+            
+            main.on("monitor", function(job, eventName){
+                console.log("%s, %s", job.name, eventName);
+                if (eventName == "complete"){
+                    register(job);
+                }
+            });
+            main.on("descendentsComplete", function(){
+                l("DESC");
+                done();
+                // assert.deepEqual(completeJobs, "")
+            });
+            main.run();
         });
 
         it("sequentially executed, parallel commands with onSuccess queues", function(done){

@@ -19,8 +19,8 @@ job2.add(twochild2);
 job.add(job1);
 job.add(job2);
 
-// job.on("monitor", function(job, eventName){
-//     console.log("%s, %s", job.name, eventName);
-// }).run();
+job.on("monitor", function(job, eventName){
+    console.log("%s, %s", job.name, eventName);
+}).run();
 
-job.monitor(process.stdout).run();
+// job.monitor(process.stdout).run();
