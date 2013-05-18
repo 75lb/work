@@ -10,24 +10,43 @@ function delay(time){
 
 var main = new Job({ name: "main" }).add([
     {
-        name: "3", 
+        name: "1", 
         parallel: true,
         command: delay,
-        args: 300,
+        args: 100,
         children: [
             {
-                name: "4", 
-                // runOn: "success",
-                parallel: true,
-                command: delay,
-                args: 300,
-            },
-            {
-                name: "5", 
-                // runOn: "fail",
+                name: "1.1", 
                 parallel: true,
                 command: delay,
                 args: 400,
+            },
+            {
+                name: "1.2",
+                parallel: true,
+                command: delay,
+                args: 50,
+                children: [
+                    {
+                        name: "1.2.1", 
+                        parallel: true,
+                        command: delay,
+                        args: 600
+                    },
+                    {
+                        name: "1.2.2", 
+                        parallel: true,
+                        command: delay,
+                        args: 150
+                    }
+                ]
+            },
+            {
+                name: "1.3",
+                parallel: true,
+                runOn: "fail",
+                command: delay,
+                args: 10,
             }
         ]
     },
@@ -35,29 +54,13 @@ var main = new Job({ name: "main" }).add([
         name: "2", 
         parallel: true,
         command: delay,
-        args: 200,
-        children: [
-            {
-                name: "6", 
-                parallel: true,
-                // runOn: "success",
-                command: delay,
-                args: 600,
-            },
-            {
-                name: "7", 
-                parallel: true,
-                // runOn: "success",
-                command: delay,
-                args: 1000,
-            }
-        ]
+        args: 200
     },
     {
-        name: "1", 
+        name: "3", 
         parallel: true,
         command: delay,
-        args: 10
+        args: 300
     }
 ]);
 

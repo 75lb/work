@@ -33,17 +33,11 @@ describe("Job", function(){
         });
 
         it("add(jobOptionsArray)", function(){
-            var job = new Job({ name: "test" }),
-               output = [];
-
-            function run(){
-               output.push(1);
-            }
-
+            var job = new Job({ name: "test" });
             job.add([
-               { name: "job 1", commandSync: run },
-               { name: "job 2", commandSync: run },
-               { name: "job 3", commandSync: run }
+               { name: "job 1" },
+               { name: "job 2" },
+               { name: "job 3" }
             ]);
 
             assert.strictEqual(job.children.length, 3);
@@ -52,17 +46,11 @@ describe("Job", function(){
         });
 
         it("add(jobArray)", function(){
-            var job = new Job({ name: "test" }),
-               output = [];
-
-            function run(){
-               output.push(1);
-            }
-
+            var job = new Job({ name: "test" });
             job.add([
-               new Job({ name: "job 1", command: run }),
-               new Job({ name: "job 2", command: run }),
-               new Job({ name: "job 3", command: run })
+               new Job({ name: "job 1" }),
+               new Job({ name: "job 2" }),
+               new Job({ name: "job 3" })
             ]);
 
             assert.strictEqual(job.children.length, 3);
@@ -72,7 +60,7 @@ describe("Job", function(){
     });
     
     describe("jobs run() in expected order", function(){
-        function GenericJob(name, parallel, time){
+        function GenericJob(name, parallel, time, register){
             Job.call(this, { 
                 name: name, 
                 parallel: parallel,
@@ -80,6 +68,7 @@ describe("Job", function(){
                     var self = this;
                     setTimeout(function(){
                         self.success();
+                        if (register) register.push(self);
                     },time);
                 }
             });
@@ -88,23 +77,15 @@ describe("Job", function(){
         
         it("mixed sequential and parallel jobs", function(done){
             var output = [];
-            var main = new Job({ name: "main"}),
-                job1 = new GenericJob("job1", true, 40),
-                job2 = new GenericJob("job2", false, 20),
-                job3 = new GenericJob("job3", true, 5);
-            main.add([ job1, job2, job3 ]);
-        
-            function register(job){
-                output.push(job.name);
-                if(output.length === 4){
-                    assert.deepEqual(output, ["main", "job2", "job3", "job1"]);
-                    done();
-                }
-            }
-            job1.on("complete", register);
-            job2.on("complete", register);
-            job3.on("complete", register);
-            main.on("complete", register).run();
+            var main = new GenericJob("main", false, 100, output).add([
+                new GenericJob("job1", true, 40, output),
+                new GenericJob("job2", false, 20, output),
+                new GenericJob("job3", true, 5, output)
+            ]);
+            main.on("children-complete", function(){
+                assert.deepEqual(output, [ "main", "job2", "job3", "job1"]);
+                done();
+            }).run();
         });
 
         it("sequential jobs", function(done){
@@ -192,7 +173,7 @@ describe("Job", function(){
             main.run();
         });
         
-        it.only("monitoring parallel executed, parallel commands with onSuccess children", function(done){
+        it("monitoring parallel executed, parallel commands with onSuccess children", function(done){
             var main = new Job({ name: "main" });
             var completeJobs = [];
             function register(job){
@@ -246,13 +227,13 @@ describe("Job", function(){
             ])
             
             main.on("monitor", function(job, eventName){
-                console.log("%s, %s", job.name, eventName);
+                // console.log("%s, %s", job.name, eventName);
                 if (eventName == "complete"){
                     register(job);
                 }
             });
             main.on("descendentsComplete", function(){
-                l("DESC");
+                // l("DESC");
                 done();
                 // assert.deepEqual(completeJobs, "")
             });

@@ -19,7 +19,7 @@ function JobApplication(index){
                     self.fail();
                 }
             }, 6000 * Math.random());
-        }        
+        }
     })
 }
 util.inherits(JobApplication, Job);
