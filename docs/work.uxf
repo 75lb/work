@@ -26,19 +26,22 @@ fontsize=16
 // This text will be stored with each diagram;  use it for notes.</help_text>
   <zoom_level>10</zoom_level>
   <element>
-    <type>com.umlet.element.Relation</type>
+    <type>com.umlet.element.Note</type>
     <coordinates>
-      <x>320</x>
-      <y>650</y>
-      <w>300</w>
-      <h>50</h>
+      <x>590</x>
+      <y>340</y>
+      <w>320</w>
+      <h>320</h>
     </coordinates>
-    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
-r1=children
-m2=*
-r2=parent
-m1=0..1</panel_attributes>
-    <additional_attributes>280;30;30;30</additional_attributes>
+    <panel_attributes>bg=yellow
+_States_
+Running
+Successful
+Failed
+Terminated
+Ignored
+</panel_attributes>
+    <additional_attributes/>
   </element>
   <element>
     <type>com.umlet.element.Class</type>
@@ -48,24 +51,8 @@ m1=0..1</panel_attributes>
       <w>190</w>
       <h>60</h>
     </coordinates>
-    <panel_attributes>EventEmitter
+    <panel_attributes>Thing
 --</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Class</type>
-    <coordinates>
-      <x>40</x>
-      <y>610</y>
-      <w>310</w>
-      <h>250</h>
-    </coordinates>
-    <panel_attributes>Queue
---
---
-add()
-start()
-</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -89,56 +76,30 @@ next: Object
     <additional_attributes/>
   </element>
   <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>370</x>
-      <y>30</y>
-      <w>50</w>
-      <h>100</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
-    <additional_attributes>30;30;30;80</additional_attributes>
-  </element>
-  <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>600</x>
-      <y>610</y>
-      <w>320</w>
-      <h>250</h>
+      <x>170</x>
+      <y>120</y>
+      <w>380</w>
+      <h>600</h>
     </coordinates>
     <panel_attributes>Job
 --
+name
+runOn
+parallel
 command
 commandSync
 args
-data
-parallel
-retVal
---
-run()
-</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Class</type>
-    <coordinates>
-      <x>250</x>
-      <y>110</y>
-      <w>290</w>
-      <h>420</h>
-    </coordinates>
-    <panel_attributes>WorkItem
---
-name
+returnValue
 running
-timer
 progress
-successful
-complete
+complete (success, fail, terminated, ignored)
 info
 warnings
 errors
+--
+run()
 --
 &lt;&lt;event&gt;&gt; starting ()
 &lt;&lt;event&gt;&gt; progress (progress)
@@ -155,16 +116,12 @@ errors
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>320</x>
-      <y>720</y>
-      <w>300</w>
-      <h>50</h>
+      <x>370</x>
+      <y>30</y>
+      <w>50</w>
+      <h>110</h>
     </coordinates>
-    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
-r1=children
-m2=*
-r2=parent
-m1=0..1</panel_attributes>
-    <additional_attributes>30;30;280;30</additional_attributes>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>30;30;30;90</additional_attributes>
   </element>
 </diagram>

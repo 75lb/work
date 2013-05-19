@@ -2,129 +2,24 @@
 <diagram program="umlet" version="12.0">
   <zoom_level>10</zoom_level>
   <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>530</x>
-      <y>210</y>
-      <w>110</w>
-      <h>70</h>
-    </coordinates>
-    <panel_attributes>lt=-</panel_attributes>
-    <additional_attributes>30;50;90;30</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>140</x>
-      <y>180</y>
-      <w>150</w>
-      <h>200</h>
-    </coordinates>
-    <panel_attributes>lt=-</panel_attributes>
-    <additional_attributes>30;30;130;180</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Note</type>
-    <coordinates>
-      <x>590</x>
-      <y>380</y>
-      <w>160</w>
-      <h>120</h>
-    </coordinates>
-    <panel_attributes>Note..
-bg=yellow
-a parallel job 
-moves onto the 
-next immediately
-whether children are
-seq or parallel</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>140</x>
-      <y>180</y>
-      <w>150</w>
-      <h>290</h>
-    </coordinates>
-    <panel_attributes>lt=-</panel_attributes>
-    <additional_attributes>30;30;130;270</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>350</x>
-      <y>180</y>
-      <w>110</w>
-      <h>190</h>
-    </coordinates>
-    <panel_attributes>lt=-</panel_attributes>
-    <additional_attributes>30;30;90;170</additional_attributes>
-  </element>
-  <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>620</x>
-      <y>210</y>
-      <w>130</w>
-      <h>50</h>
-    </coordinates>
-    <panel_attributes>1.2.1 :parallel
---
-600</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Class</type>
-    <coordinates>
-      <x>440</x>
-      <y>310</y>
-      <w>120</w>
-      <h>70</h>
-    </coordinates>
-    <panel_attributes>1.3 :sequential
---
-10
-on: "fail"
-</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Note</type>
-    <coordinates>
-      <x>180</x>
-      <y>40</y>
-      <w>150</w>
-      <h>100</h>
-    </coordinates>
-    <panel_attributes>Note..
-bg=yellow
-a sequential job 
-moves onto the 
-next once it and all
-children complete</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Class</type>
-    <coordinates>
-      <x>270</x>
-      <y>330</y>
+      <x>310</x>
+      <y>390</y>
       <w>110</w>
       <h>50</h>
     </coordinates>
-    <panel_attributes>2 :parallel
+    <panel_attributes>1 :sequential
 --
-200
+100
 </panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>350</x>
-      <y>180</y>
+      <x>390</x>
+      <y>390</y>
       <w>110</w>
       <h>110</h>
     </coordinates>
@@ -132,24 +27,47 @@ children complete</panel_attributes>
     <additional_attributes>30;30;90;90</additional_attributes>
   </element>
   <element>
-    <type>com.umlet.element.Class</type>
+    <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>270</x>
-      <y>420</y>
+      <x>390</x>
+      <y>390</y>
       <w>110</w>
       <h>50</h>
     </coordinates>
-    <panel_attributes>3 :sequential
---
-300
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>30;30;90;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>180</x>
+      <y>390</y>
+      <w>150</w>
+      <h>290</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>30;30;130;270</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>610</x>
+      <y>620</y>
+      <w>140</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>bg=yellow
+1 child jobs start 
+on "complete"
+unless specified
 </panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>440</x>
-      <y>180</y>
+      <x>480</x>
+      <y>390</y>
       <w>120</w>
       <h>50</h>
     </coordinates>
@@ -162,72 +80,23 @@ children complete</panel_attributes>
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>620</x>
-      <y>270</y>
-      <w>130</w>
-      <h>50</h>
+      <x>480</x>
+      <y>520</y>
+      <w>120</w>
+      <h>70</h>
     </coordinates>
-    <panel_attributes>1.2.2 :sequential
+    <panel_attributes>1.3 :sequential
 --
-150</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Note</type>
-    <coordinates>
-      <x>390</x>
-      <y>40</y>
-      <w>140</w>
-      <h>90</h>
-    </coordinates>
-    <panel_attributes>Note..
-bg=yellow
-1 child jobs start 
-on "complete"
-unless specified
+10
+on: "fail"
 </panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>530</x>
-      <y>230</y>
-      <w>110</w>
-      <h>80</h>
-    </coordinates>
-    <panel_attributes>lt=-</panel_attributes>
-    <additional_attributes>30;30;90;60</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Class</type>
-    <coordinates>
-      <x>440</x>
-      <y>240</y>
-      <w>120</w>
-      <h>50</h>
-    </coordinates>
-    <panel_attributes>1.2 :parallel
---
-50</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>350</x>
-      <y>180</y>
-      <w>110</w>
-      <h>50</h>
-    </coordinates>
-    <panel_attributes>lt=-</panel_attributes>
-    <additional_attributes>30;30;90;30</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Relation</type>
-    <coordinates>
-      <x>140</x>
-      <y>180</y>
+      <x>180</x>
+      <y>390</y>
       <w>150</w>
       <h>50</h>
     </coordinates>
@@ -236,10 +105,22 @@ r1=children</panel_attributes>
     <additional_attributes>30;30;130;30</additional_attributes>
   </element>
   <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>80</x>
+      <y>390</y>
+      <w>130</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>main :sequential
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
     <type>com.umlet.element.Note</type>
     <coordinates>
-      <x>770</x>
-      <y>20</y>
+      <x>810</x>
+      <y>230</y>
       <w>210</w>
       <h>480</h>
     </coordinates>
@@ -273,29 +154,157 @@ main decedents complete</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>570</x>
+      <y>420</y>
+      <w>110</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>30;50;90;30</additional_attributes>
+  </element>
+  <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>270</x>
-      <y>180</y>
+      <x>310</x>
+      <y>540</y>
       <w>110</w>
       <h>50</h>
     </coordinates>
-    <panel_attributes>1 :sequential
+    <panel_attributes>2 :parallel
 --
-100
+200
 </panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>40</x>
-      <y>180</y>
+      <x>480</x>
+      <y>450</y>
+      <w>120</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>1.2 :parallel
+--
+50</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>570</x>
+      <y>440</y>
+      <w>110</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>30;30;90;60</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>660</x>
+      <y>420</y>
       <w>130</w>
       <h>50</h>
     </coordinates>
-    <panel_attributes>main :sequential
---</panel_attributes>
+    <panel_attributes>1.2.1 :parallel
+--
+600</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>180</x>
+      <y>390</y>
+      <w>150</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>30;30;130;180</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>410</x>
+      <y>150</y>
+      <w>310</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>bg=yellow
+_Parallel run() process_
+a) run command
+b) start next sibling job
+ 
+*) on completion
+  *.1) job has children
+    *.1.a) start first child</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>660</x>
+      <y>480</y>
+      <w>130</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>1.2.2 :sequential
+--
+150</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>390</x>
+      <y>390</y>
+      <w>110</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>30;30;90;170</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>30</x>
+      <y>70</y>
+      <w>330</w>
+      <h>310</h>
+    </coordinates>
+    <panel_attributes>bg=yellow
+_Seqential run() process_
+a) runOn value is blank, or matches parent 
+completion state (success, fail, terminated)
+  a.1) run command
+  a.2) wait for completion
+  a.2) on completion
+    a.2.1) job has children
+      a.2.1.a) start first child job
+      a.2.1.b) wait for descendents to complete
+      a.2.1.c) start next sibling
+    a.2.2) job has no children
+      c.2.a) start next sibling
+b) on values does not match parent state
+  b.1) mark as "ignored"</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>310</x>
+      <y>630</y>
+      <w>110</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>3 :sequential
+--
+300
+</panel_attributes>
     <additional_attributes/>
   </element>
 </diagram>
