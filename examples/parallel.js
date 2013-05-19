@@ -5,7 +5,7 @@ function delay(time){
     var self = this;
     setTimeout(function(){
         self.success();
-    }, time);
+    }, time * 10);
 }
 
 var main = new Job({ name: "main" }).add([
@@ -65,7 +65,7 @@ var main = new Job({ name: "main" }).add([
 ]);
 
 main.on("monitor", function(job, eventName){
-    console.log("%s, %s", job.name, eventName);
+    console.log("%s, %s, %s, %s", job.name, eventName, job.args || "", job.parallel);
 }).run();
 
 // main.monitor(process.stdout).run();
