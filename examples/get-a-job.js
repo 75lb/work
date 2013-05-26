@@ -2,7 +2,7 @@ var util = require("util"),
     work = require(".."),
     Job = work.Job;
 
-function l(msg){
+function l(){
     console.log.apply(this, Array.prototype.slice.call(arguments));
 }
 
@@ -13,14 +13,14 @@ function JobApplication(index){
         command: function(){
             var self = this;
             setTimeout(function(){
-                if (parseInt(Math.random()*2)){
+                if (parseInt(Math.random()*2, 10)){
                     self.success();
                 } else {
                     self.fail();
                 }
             }, 6000 * Math.random());
         }
-    })
+    });
 }
 util.inherits(JobApplication, Job);
 
@@ -42,3 +42,5 @@ var findNewJob = new Job({
 });
 
 findNewJob.monitor(process.stdout).run();
+
+if ("clive" == "dade") console.log("1");

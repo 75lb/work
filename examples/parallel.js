@@ -19,7 +19,7 @@ var main = new Job({ name: "main" }).add([
                 name: "1.1", 
                 parallel: true,
                 command: delay,
-                args: 400,
+                args: 400
             },
             {
                 name: "1.2",
@@ -46,7 +46,7 @@ var main = new Job({ name: "main" }).add([
                 parallel: true,
                 runOn: "fail",
                 command: delay,
-                args: 10,
+                args: 10
             }
         ]
     },
@@ -64,20 +64,20 @@ var main = new Job({ name: "main" }).add([
     }
 ]);
 
-// main.on("monitor", function(job, eventName, data){
-//     console.log(
-//         "%s, %s, %s, %s, %s", 
-//         job.name, 
-//         eventName, 
-//         job.args || "N/A", 
-//         job.state,
-//         JSON.stringify(data) || ""
-//     );
-// });
+main.on("monitor", function(job, eventName, data){
+    console.log(
+        "%s, %s, %s, %s, %s", 
+        job.name, 
+        eventName, 
+        job.args || "N/A", 
+        job.state,
+        JSON.stringify(data) || ""
+    );
+});
 main.run();
 
 // main.monitor(process.stdout).run();
 
 main.on("descendentsComplete", function(){
     console.log("DONE");
-})
+});
