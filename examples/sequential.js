@@ -16,7 +16,7 @@ function whiteSpace(length){
 }
 
 var job = new Job({ name: "main", commandSync: someCommand() });
-var job1 = new Job({ name: "one", commandSync: someCommand(true) });
+var job1 = new Job({ name: "one", commandSync: someCommand() });
 var job2 = new Job({ name: "two", commandSync: someCommand() });
 var onechild1 = new Job({ name: "one child 1", runOn: "fail", commandSync: someCommand()});
 var onechild2 = new Job({ name: "one child 2", commandSync: someCommand()});
