@@ -31,7 +31,7 @@ job.add(job1);
 job.add(job2);
 
 job.on("monitor", function(job, eventName, data){
-    console.log("%s%s, %s, %s, %s", whiteSpace(job.depth()), job.name, eventName, job.state, JSON.stringify(data) || "");
-}).run();
+    console.log("%s%s, %s, %s, %s", whiteSpace(job.getDepth()), job.name, eventName, job.state, JSON.stringify(data) || "");
+}).print().run();
 
 // job.monitor(process.stdout).run();
