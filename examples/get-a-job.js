@@ -6,8 +6,8 @@ function l(){
     console.log.apply(this, Array.prototype.slice.call(arguments));
 }
 
-function JobApplication(index){
-    Job.call(this, {
+function createJobApplication(index){
+    return new Job({
         name: "job application " + index,
         parallel: true,
         command: function(){
@@ -22,25 +22,28 @@ function JobApplication(index){
         }
     });
 }
-util.inherits(JobApplication, Job);
 
 var findNewJob = new Job({
     name: "Find a new job"
 });
 
 [1,2,3,4,5,6,7,8,9,10].forEach(function(index){
-    findNewJob.add(new JobApplication(index).add([
+    findNewJob.add(createJobApplication(index).add([
         {
             name: "celebrate " + index,
-            runOn: "success"
+            runOn: "success",
+            commandSync: function(){
+                this.inform("congrats");
+            }
         },
         {
             name: "sulk " + index,
-            runOn: "fail"
+            runOn: "fail",
+            commandSync: function(){
+                this.inform("no luck");
+            }
         }
     ]));
 });
 
 findNewJob.monitor(process.stdout).run();
-
-if ("clive" == "dade") console.log("1");
