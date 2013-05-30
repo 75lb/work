@@ -44,7 +44,7 @@ var main = new Job({ name: "main" }).add([
             {
                 name: "1.3",
                 parallel: true,
-                runOn: "fail",
+                runOn: "failed",
                 command: delay,
                 args: 10
             }

@@ -31,14 +31,14 @@ var findNewJob = new Job({
     findNewJob.add(createJobApplication(index).add([
         {
             name: "celebrate " + index,
-            runOn: "success",
+            runOn: "successful",
             commandSync: function(){
                 this.inform("congrats");
             }
         },
         {
             name: "sulk " + index,
-            runOn: "fail",
+            runOn: "failed",
             commandSync: function(){
                 this.inform("no luck");
             }
@@ -47,3 +47,6 @@ var findNewJob = new Job({
 });
 
 findNewJob.monitor(process.stdout).run();
+// findNewJob.on("monitor", function(job, evt, data){
+//     console.log(job.name, evt);
+// }).run();
