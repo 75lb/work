@@ -16,28 +16,26 @@ var housework = new work.Job({ name: "housework" }).add([
         args: "Al Green"
     },
     { 
-        name: "dishes",
+        name: "wash dishes",
         command: wash,
         args: [ pots, pans, cutlery ],
-        children: [
-            {
-                name: "change music",
-                runOn: "progress"
-                commandSync: function(){
-                    // half way through washing the dishes
-                    if (this.parent.progress.percentComplete == 50){
-                        launchPlaylist("Metal");
-                    }
+        onProgress: {
+            name: "change music",
+            commandSync: function(){
+                // half way through washing the dishes
+                if (this.progress.percentComplete == 50){
+                    launchPlaylist("Metal");
                 }
-            },
+            }
+        },
+        onComplete: [
             {
                 name: "wipe worktops",
-                runOn: "complete",
                 command: wash,
                 args: [ worktops ],
                 onSuccess: {
                     name: "procrastinate",
-                    command: "postFacebookStatus",
+                    command: postFacebookStatus,
                     args: "I'm a model parent and my kids are clever. "
                 }
             }
@@ -51,7 +49,7 @@ var housework = new work.Job({ name: "housework" }).add([
 ]);
 
 // get to work, monitoring progress on stdout
-queue.monitor(process.stdout).start();
+housework.monitor(process.stdout).run();
 ```
 
 Install
