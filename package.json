@@ -1,6 +1,6 @@
 {
   "name": "work",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Got a thousand jobs to do? Get an execution plan!",
   "keywords": [
     "job",
@@ -20,6 +20,7 @@
     "underscore": "~1.4.4",
     "nature": "~0.0.2",
     "timepiece": "~0.0.1",
-    "ansi": "~0.1.2"
+    "ansi": "~0.1.2",
+    "sprintf-js": "0.0.7"
   }
 }
