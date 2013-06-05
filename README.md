@@ -64,3 +64,5 @@ $ git clone https://github.com/75lb/work.git
 $ cd work
 $ npm test
 ```
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/2433e9f4ebb10607ef686be852613928 "githalytics.com")](http://githalytics.com/75lb/work)
