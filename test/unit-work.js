@@ -1,6 +1,6 @@
 var work = require("../lib/work"),
     util = require("util"),
-    _ = require("underscore"),
+    _ = require("lodash"),
     path = require("path"),
     assert = require("assert"),
     Job = work.Job;

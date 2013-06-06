@@ -17,10 +17,9 @@
   "author": "Lloyd Brookes",
   "license": "MIT",
   "dependencies": {
-    "underscore": "~1.4.4",
     "nature": "~0.0.2",
-    "timepiece": "~0.0.1",
     "ansi": "~0.1.2",
-    "sprintf-js": "0.0.7"
+    "sprintf-js": "0.0.7",
+    "lodash": "~1.2.1"
   }
 }
