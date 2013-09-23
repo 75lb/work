@@ -1,5 +1,7 @@
 ***under construction***
 
+[![NPM version](https://badge.fury.io/js/work.png)](http://badge.fury.io/js/work)
+
 Work
 ====
 Got a thousand jobs to do? Get an execution plan! Work provides a means to build a hierarchy of jobs, executed in the order, and with the strategy provided. Build your own dashboard to monitor events / progress or use the one built it. Work makes use of the [Composite Pattern](http://en.wikipedia.org/wiki/Composite_pattern).
@@ -66,3 +68,4 @@ $ npm test
 ```
 
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/2433e9f4ebb10607ef686be852613928 "githalytics.com")](http://githalytics.com/75lb/work)
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/75lb/work/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
