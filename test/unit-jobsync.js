@@ -6,14 +6,14 @@ describe("JobSync: simple success path", function(){
 
     var _job;
 
-    function syncCommand(){
+    function command(){
         return arguments.length;
     }
 
     beforeEach(function(){
         _job = new JobSync({
             name: "test",
-            command: syncCommand,
+            command: command,
             args: [ 1,2,3 ]
         });
     });
