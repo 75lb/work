@@ -1,10 +1,7 @@
 var util = require("util"),
     work = require(".."),
-    Job = work.Job;
-
-function l(){
-    console.log.apply(this, Array.prototype.slice.call(arguments));
-}
+    Job = work.Job,
+    l = console.log;
 
 function createJobApplication(index){
     return new Job({
