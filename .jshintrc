@@ -12,5 +12,6 @@
     "quotmark": "double",
     "trailing": true,
     "undef": true,
-    "unused": "strict"
+    "unused": "strict",
+    "globals": { "describe": false, "beforeEach": false, "it": false }
 }
