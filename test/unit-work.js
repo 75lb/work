@@ -3,7 +3,7 @@ var Job = require("../lib/Job"),
     assert = require("assert"),
     l = console.log;
 
-describe("JobSync", function(){
+describe("JobSync: success path", function(){
 
     var _job;
 
