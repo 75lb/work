@@ -2,14 +2,19 @@ var AsyncJob = require("../lib/AsyncJob"),
     assert = require("assert"),
     l = console.log;
 
-describe("async: simple success path", function(){
+describe("async: simple fail path", function(){
 
     var _job;
 
     function command(){
-        var self = this,
-            argCount = arguments.length;
-        setTimeout(function(){ self.done(null, argCount); }, 10);
+        var self = this;
+        setTimeout(function(){
+            try{
+                throw new Error("broken");
+            } catch(err){
+                self.done(err);
+            }
+        }, 10);
     }
 
     beforeEach(function(){
@@ -20,28 +25,24 @@ describe("async: simple success path", function(){
         });
     });
 
-    it("correct name", function(){
-        assert.strictEqual(_job.name, "test");
-    });
-
     it("correct state", function(done){
         assert.strictEqual(_job.state, _job.eState.idle);
-        _job.run(function(){
-            assert.strictEqual(_job.state, _job.eState.successful);
+        _job.run(function(err, value){
+            assert.strictEqual(_job.state, _job.eState.failed);
             done();
         });
         assert.strictEqual(_job.state, _job.eState.running);
     });
 
     it("correct return value", function(done){
-        _job.run(function(err, ret){
-            assert.strictEqual(ret, 4);
+        _job.run(function(err, returnValue){
+            assert.strictEqual(returnValue, undefined);
             done();
         });
     });
 
     it("correct events", function(done){
-        var start, complete, success, fail;
+        var start, complete, fail, success;
         _job.on(_job.eEvent.start, function(){
             start = true;
         });
@@ -54,8 +55,8 @@ describe("async: simple success path", function(){
         _job.on(_job.eEvent.complete, function(){
             complete = true;
             assert.ok(start);
-            assert.ok(success);
-            assert.ok(!fail);
+            assert.ok(!success);
+            assert.ok(fail);
             assert.ok(complete);
             done();
         });
