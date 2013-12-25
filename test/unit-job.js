@@ -41,13 +41,17 @@ describe("Job: simple success path", function(){
     });
 
     it("correct events", function(done){
-        var start, complete;
+        var start, complete, success;
         _job.on(_job.eEvent.start, function(){
             start = true;
+        });
+        _job.on(_job.eEvent.success, function(){
+            success = true;
         });
         _job.on(_job.eEvent.complete, function(){
             complete = true;
             assert.ok(start);
+            assert.ok(success);
             assert.ok(complete);
             done();
         });
