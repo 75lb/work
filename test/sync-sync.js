@@ -115,9 +115,9 @@ describe("sync > sync", function(){
     });
     
     it("queue runs correctly", function(){
-        var result = "";
+        var result = [];
         function concat(msg){
-            result += msg;
+            result.push(msg)
         }
         function createJob(msg){
             return new SyncJob({
@@ -132,6 +132,6 @@ describe("sync > sync", function(){
         queue.add(createJob("hater"));
         queue.add(createJob("nigeria"));
         queue.run();
-        assert.strictEqual(result, "clivehaternigeria");
+        assert.strictEqual(result.toString(), "clive,hater,nigeria");
     });
 });
