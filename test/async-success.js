@@ -1,4 +1,4 @@
-var Job = require("../lib/Job"),
+var AsyncJob = require("../lib/AsyncJob"),
     assert = require("assert"),
     l = console.log;
 
@@ -13,7 +13,7 @@ describe("async: simple success path", function(){
     }
 
     beforeEach(function(){
-        _job = new Job({
+        _job = new AsyncJob({
             name: "test",
             command: command,
             args: [ 1,2,3,4 ]

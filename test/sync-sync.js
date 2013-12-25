@@ -1,4 +1,4 @@
-var JobSync = require("../lib/JobSync"),
+var SyncJob = require("../lib/SyncJob"),
     assert = require("assert"),
     l = console.log;
 
@@ -15,29 +15,29 @@ describe("sync > sync", function(){
     }
 
     beforeEach(function(){
-        _job = new JobSync({
+        _job = new SyncJob({
             name: "test",
             command: command,
             args: [ 1,2,3 ]
         });
-        _brokenJob = new JobSync({
+        _brokenJob = new SyncJob({
             name: "test",
             command: brokenCommand,
             args: [ 1,2,3 ]
         });
-        _runOnComplete = new JobSync({
+        _runOnComplete = new SyncJob({
             name: "child1",
             runOn: "complete",
             command: command,
             args: 1
         });
-        _runOnFail = new JobSync({
+        _runOnFail = new SyncJob({
             name: "child2",
             runOn: "fail",
             command: command,
             args: 1
         });
-        _runOnSuccess = new JobSync({
+        _runOnSuccess = new SyncJob({
             name: "child3",
             runOn: "success",
             command: command,
@@ -112,5 +112,26 @@ describe("sync > sync", function(){
         assert.ok(runOnCompleteRan);
         assert.ok(!runOnFailRan);
         assert.ok(runOnSuccessRan);
+    });
+    
+    it("queue runs correctly", function(){
+        var result = "";
+        function concat(msg){
+            result += msg;
+        }
+        function createJob(msg){
+            return new SyncJob({
+                name: "job",
+                command: concat,
+                args: msg
+            });
+        }
+
+        var queue = new SyncJob({ name: "queue" });
+        queue.add(createJob("clive"));
+        queue.add(createJob("hater"));
+        queue.add(createJob("nigeria"));
+        queue.run();
+        assert.strictEqual(result, "clivehaternigeria");
     });
 });

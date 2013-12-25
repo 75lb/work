@@ -1,4 +1,4 @@
-var JobSync = require("../lib/JobSync"),
+var SyncJob = require("../lib/SyncJob"),
     assert = require("assert"),
     l = console.log;
 
@@ -12,7 +12,7 @@ describe("sync: simple fail path", function(){
     }
 
     beforeEach(function(){
-        _job = new JobSync({
+        _job = new SyncJob({
             name: "test",
             command: command,
             args: [ 1,2,3 ]
