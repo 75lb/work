@@ -2,12 +2,13 @@ var JobSync = require("../lib/JobSync"),
     assert = require("assert"),
     l = console.log;
 
-describe("JobSync: simple success path", function(){
+describe("sync: simple fail path", function(){
 
     var _job;
 
     function command(){
-        return arguments.length;
+        throw new Error("broken");
+        return 3;
     }
 
     beforeEach(function(){
@@ -18,35 +19,50 @@ describe("JobSync: simple success path", function(){
         });
     });
 
-    it("correct name", function(){
-        assert.strictEqual(_job.name, "test");
+    it("correctly throws", function(){
+        assert.throws(_job.run);
     });
 
     it("correct state", function(){
         assert.strictEqual(_job.state, _job.eState.idle);
-        _job.run();
-        assert.strictEqual(_job.state, _job.eState.successful);
+        try {
+            _job.run()
+        } catch(err){
+            assert.strictEqual(_job.state, _job.eState.failed);
+        };
+    });
+
+    it("correct error message", function(){
+        try {
+            _job.run()
+        } catch(err){
+            assert.strictEqual(err.message, "broken");
+        };
     });
 
     it("correct return value", function(){
         var ret = _job.run();
-        assert.strictEqual(ret, 3);
+        assert.strictEqual(ret, undefined);
     });
 
     it("correct events", function(){
-        var start, complete, success;
+        var start, complete, fail, success;
         _job.on(_job.eEvent.start, function(){
             start = true;
         });
         _job.on(_job.eEvent.success, function(){
             success = true;
         });
+        _job.on(_job.eEvent.fail, function(){
+            fail = true;
+        });
         _job.on(_job.eEvent.complete, function(){
             complete = true;
         });
         _job.run();
         assert.ok(start);
-        assert.ok(success);
+        assert.ok(!success);
+        assert.ok(fail);
         assert.ok(complete);
     });
 });

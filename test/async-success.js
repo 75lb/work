@@ -2,7 +2,7 @@ var Job = require("../lib/Job"),
     assert = require("assert"),
     l = console.log;
 
-describe("Job: simple success path", function(){
+describe("async: simple success path", function(){
 
     var _job;
 
