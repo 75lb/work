@@ -2,7 +2,7 @@ var AsyncJob = require("../lib/AsyncJob"),
     assert = require("assert"),
     l = console.log;
 
-describe("async > async", function(){
+describe.only("async > async", function(){
 
     var _job, _child1;
 
@@ -48,30 +48,27 @@ describe("async > async", function(){
         });
     });
 
-    it("all complete event", function(){
-        _job.add(_runOnComplete);
-        _job.add(_runOnFail);
-        _job.add(_runOnSuccess);
-    });
-
     it("runOn 'complete' works", function(done){
         var runOnCompleteRan = false, runOnFailRan = false, runOnSuccessRan = false;
         _job.add(_runOnComplete);
         _job.add(_runOnFail);
         _job.add(_runOnSuccess);
-        _runOnComplete.on("complete", function(){
+        _runOnComplete.on("success", function(){
             runOnCompleteRan = true;
         });
-        _runOnFail.on("complete", function(){
+        _runOnFail.on("success", function(){
             runOnFailRan = true;
         });
-        _runOnSuccess.on("complete", function(){
+        _runOnSuccess.on("success", function(){
             runOnSuccessRan = true;
         });
+        _job.children.on("complete", function(){
+            assert.ok(runOnCompleteRan);
+            assert.ok(!runOnFailRan);
+            assert.ok(runOnSuccessRan);
+            done();
+        })
         _job.run();
-        assert.ok(runOnCompleteRan);
-        assert.ok(!runOnFailRan);
-        assert.ok(runOnSuccessRan);
     });
 
     it("runOn 'fail' works", function(){
@@ -79,19 +76,22 @@ describe("async > async", function(){
         _brokenJob.add(_runOnComplete);
         _brokenJob.add(_runOnFail);
         _brokenJob.add(_runOnSuccess);
-        _runOnComplete.on("complete", function(){
+        _runOnComplete.on("success", function(){
             runOnCompleteRan = true;
         });
-        _runOnFail.on("complete", function(){
+        _runOnFail.on("success", function(){
             runOnFailRan = true;
         });
-        _runOnSuccess.on("complete", function(){
+        _runOnSuccess.on("success", function(){
             runOnSuccessRan = true;
         });
+        _job.children.on("complete", function(){
+            assert.ok(runOnCompleteRan);
+            assert.ok(runOnFailRan);
+            assert.ok(!runOnSuccessRan);
+            done();
+        })
         _brokenJob.run();
-        assert.ok(runOnCompleteRan);
-        assert.ok(runOnFailRan);
-        assert.ok(!runOnSuccessRan);
     });
 
     it("runOn 'success' works", function(){
@@ -108,10 +108,13 @@ describe("async > async", function(){
         _runOnSuccess.on("complete", function(){
             runOnSuccessRan = true;
         });
+        _job.children.on("complete", function(){
+            assert.ok(runOnCompleteRan);
+            assert.ok(!runOnFailRan);
+            assert.ok(runOnSuccessRan);
+            done();
+        })
         _job.run();
-        assert.ok(runOnCompleteRan);
-        assert.ok(!runOnFailRan);
-        assert.ok(runOnSuccessRan);
     });
     
     it("queue runs correctly", function(){
