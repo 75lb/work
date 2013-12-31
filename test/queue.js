@@ -4,7 +4,7 @@ var Queue = require("../lib/Queue"),
     l = console.log;
 
 describe("Queue", function(){
-    var _queue;
+    var _queue, counter = 1;
     beforeEach(function(){
         _queue = new Queue();
     });
@@ -13,10 +13,11 @@ describe("Queue", function(){
         return new AsyncJob({
             name: "job", 
             command: function(){
-                var self = this;
+                var self = this, 
+                    timeout = Math.random() * 100;
                 setTimeout(function(){
                     self.done();
-                }, Math.random() * 100);
+                }, timeout);
             }
         });
     }

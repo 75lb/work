@@ -18,41 +18,56 @@ describe("async: simple fail path", function(){
     }
 
     beforeEach(function(){
-        _job = new AsyncJob({
+        // _job = new AsyncJob({
+        //     name: "test",
+        //     command: command,
+        //     args: [ 1,2,3,4 ]
+        // });
+    });
+
+    it("correct state", function(done){
+        var job = new AsyncJob({
             name: "test",
             command: command,
             args: [ 1,2,3,4 ]
         });
-    });
-
-    it("correct state", function(done){
-        assert.strictEqual(_job.state, _job.eState.idle);
-        _job.run(function(err, value){
-            assert.strictEqual(_job.state, _job.eState.failed);
+        assert.strictEqual(job.state, job.eState.idle);
+        job.run(function(err, value){
+            assert.strictEqual(job.state, job.eState.failed);
             done();
         });
-        assert.strictEqual(_job.state, _job.eState.running);
+        assert.strictEqual(job.state, job.eState.running);
     });
 
     it("correct return value", function(done){
-        _job.run(function(err, returnValue){
+        var job = new AsyncJob({
+            name: "test",
+            command: command,
+            args: [ 1,2,3,4 ]
+        });
+        job.run(function(err, returnValue){
             assert.strictEqual(returnValue, undefined);
             done();
         });
     });
 
     it("correct events", function(done){
+        var job = new AsyncJob({
+            name: "test",
+            command: command,
+            args: [ 1,2,3,4 ]
+        });
         var start, complete, fail, success;
-        _job.on(_job.eEvent.start, function(){
+        job.on(job.eEvent.start, function(){
             start = true;
         });
-        _job.on(_job.eEvent.success, function(){
+        job.on(job.eEvent.success, function(){
             success = true;
         });
-        _job.on(_job.eEvent.fail, function(){
+        job.on(job.eEvent.fail, function(){
             fail = true;
         });
-        _job.on(_job.eEvent.complete, function(){
+        job.on(job.eEvent.complete, function(){
             complete = true;
             assert.ok(start);
             assert.ok(!success);
@@ -60,6 +75,6 @@ describe("async: simple fail path", function(){
             assert.ok(complete);
             done();
         });
-        _job.run();
+        job.run();
     });
 });

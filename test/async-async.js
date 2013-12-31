@@ -2,7 +2,7 @@ var AsyncJob = require("../lib/AsyncJob"),
     assert = require("assert"),
     l = console.log;
 
-describe.only("async > async", function(){
+describe("async > async", function(){
 
     var _job, _child1;
 
@@ -18,11 +18,11 @@ describe.only("async > async", function(){
     }
 
     beforeEach(function(){
-        _job = new AsyncJob({
-            name: "test",
-            command: command,
-            args: [ 1,2,3 ]
-        });
+        // _job = new AsyncJob({
+        //     name: "test",
+        //     command: command,
+        //     args: [ 1,2,3 ]
+        // });
         _brokenJob = new AsyncJob({
             name: "test",
             command: brokenCommand,
@@ -50,9 +50,32 @@ describe.only("async > async", function(){
 
     it("runOn 'complete' works", function(done){
         var runOnCompleteRan = false, runOnFailRan = false, runOnSuccessRan = false;
-        _job.add(_runOnComplete);
-        _job.add(_runOnFail);
-        _job.add(_runOnSuccess);
+        var job = new AsyncJob({
+            name: "test",
+            command: command,
+            args: [ 1,2,3 ]
+        });
+        var _runOnComplete = new AsyncJob({
+            name: "child1",
+            runOn: "complete",
+            command: command,
+            args: 1
+        });
+        var _runOnFail = new AsyncJob({
+            name: "child2",
+            runOn: "fail",
+            command: command,
+            args: 1
+        });
+        var _runOnSuccess = new AsyncJob({
+            name: "child3",
+            runOn: "success",
+            command: command,
+            args: 1
+        });
+        job.add(_runOnComplete);
+        job.add(_runOnFail);
+        job.add(_runOnSuccess);
         _runOnComplete.on("success", function(){
             runOnCompleteRan = true;
         });
@@ -62,17 +85,40 @@ describe.only("async > async", function(){
         _runOnSuccess.on("success", function(){
             runOnSuccessRan = true;
         });
-        _job.children.on("complete", function(){
+        job.children.on("complete", function(){
             assert.ok(runOnCompleteRan);
             assert.ok(!runOnFailRan);
             assert.ok(runOnSuccessRan);
             done();
         })
-        _job.run();
+        job.run();
     });
 
     it("runOn 'fail' works", function(){
         var runOnCompleteRan = false, runOnFailRan = false, runOnSuccessRan = false;
+        var job = new AsyncJob({
+            name: "test",
+            command: command,
+            args: [ 1,2,3 ]
+        });
+        var _runOnComplete = new AsyncJob({
+            name: "child1",
+            runOn: "complete",
+            command: command,
+            args: 1
+        });
+        var _runOnFail = new AsyncJob({
+            name: "child2",
+            runOn: "fail",
+            command: command,
+            args: 1
+        });
+        var _runOnSuccess = new AsyncJob({
+            name: "child3",
+            runOn: "success",
+            command: command,
+            args: 1
+        });
         _brokenJob.add(_runOnComplete);
         _brokenJob.add(_runOnFail);
         _brokenJob.add(_runOnSuccess);
@@ -85,7 +131,7 @@ describe.only("async > async", function(){
         _runOnSuccess.on("success", function(){
             runOnSuccessRan = true;
         });
-        _job.children.on("complete", function(){
+        job.children.on("complete", function(){
             assert.ok(runOnCompleteRan);
             assert.ok(runOnFailRan);
             assert.ok(!runOnSuccessRan);
@@ -96,9 +142,32 @@ describe.only("async > async", function(){
 
     it("runOn 'success' works", function(){
         var runOnCompleteRan = false, runOnFailRan = false, runOnSuccessRan = false;
-        _job.add(_runOnComplete);
-        _job.add(_runOnFail);
-        _job.add(_runOnSuccess);
+        var job = new AsyncJob({
+            name: "test",
+            command: command,
+            args: [ 1,2,3 ]
+        });
+        var _runOnComplete = new AsyncJob({
+            name: "child1",
+            runOn: "complete",
+            command: command,
+            args: 1
+        });
+        var _runOnFail = new AsyncJob({
+            name: "child2",
+            runOn: "fail",
+            command: command,
+            args: 1
+        });
+        var _runOnSuccess = new AsyncJob({
+            name: "child3",
+            runOn: "success",
+            command: command,
+            args: 1
+        });
+        job.add(_runOnComplete);
+        job.add(_runOnFail);
+        job.add(_runOnSuccess);
         _runOnComplete.on("complete", function(){
             runOnCompleteRan = true;
         });
@@ -108,13 +177,13 @@ describe.only("async > async", function(){
         _runOnSuccess.on("complete", function(){
             runOnSuccessRan = true;
         });
-        _job.children.on("complete", function(){
+        job.children.on("complete", function(){
             assert.ok(runOnCompleteRan);
             assert.ok(!runOnFailRan);
             assert.ok(runOnSuccessRan);
             done();
         })
-        _job.run();
+        job.run();
     });
     
     it("queue runs correctly", function(){
