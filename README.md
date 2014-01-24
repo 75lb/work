@@ -1,6 +1,8 @@
-***under construction***
-
 [![NPM version](https://badge.fury.io/js/work.png)](http://badge.fury.io/js/work)
+[![Dependency Status](https://david-dm.org/75lb/work.png)](https://david-dm.org/75lb/work)
+![Analytics](https://ga-beacon.appspot.com/UA-27725889-8/work/README.md?pixel)
+
+***under construction***
 
 Work
 ====
@@ -67,5 +69,4 @@ $ cd work
 $ npm test
 ```
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/2433e9f4ebb10607ef686be852613928 "githalytics.com")](http://githalytics.com/75lb/work)
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/75lb/work/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+[![NPM](https://nodei.co/npm-dl/work.png?months=3)](https://nodei.co/npm/work/)
