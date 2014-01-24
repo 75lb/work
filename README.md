@@ -1,6 +1,6 @@
 [![NPM version](https://badge.fury.io/js/work.png)](http://badge.fury.io/js/work)
 [![Dependency Status](https://david-dm.org/75lb/work.png)](https://david-dm.org/75lb/work)
-![Analytics](https://ga-beacon.appspot.com/UA-27725889-8/work/README.md?pixel)
+![Analytics](https://ga-beacon.appspot.com/UA-27725889-7/work/README.md?pixel)
 
 ***under construction***
 
