@@ -8,22 +8,16 @@
   ],
   "main": "lib/work.js",
   "scripts": {
-    "test": "mocha test/*.js --reporter spec"
+    "test": "tape test/*.js",
+    "docs": "jsdoc2md lib/*.js -l js -t jsdoc2md/README.hbs > README.md; echo"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/75lb/work.git"
-  },
+  "repository": "https://github.com/75lb/work.git",
   "author": "Lloyd Brookes",
   "license": "MIT",
   "dependencies": {
-    "nature": "~0.2.1",
-    "ansi": "~0.2.0",
-    "sprintf-js": "0.0.7",
-    "lodash": "~2.4",
-    "q": "~1.0"
+    "q": "^1.0"
   },
   "devDependencies": {
-    "mocha": "~1.17.0"
+    "tape": "^4.0.0"
   }
 }
