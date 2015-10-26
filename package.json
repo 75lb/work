@@ -1,7 +1,7 @@
 {
   "name": "work",
   "author": "Lloyd Brookes <75pound@gmail.com>",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "work",
   "repository": "https://github.com/75lb/work",
   "main": "./lib/work.js",
