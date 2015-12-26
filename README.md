@@ -6,7 +6,7 @@
 
 <a name="module_work"></a>
 ## work
-A first-in-first-out async task queue. Fill the queue with [Task](#module_work.Task) instances  * (using [module:work.TaskQueue#push](module:work.TaskQueue#push)) then (when ready) call {@link  * module:work.TaskQueue#process} to settle each task in the order they were received. During  * processing, the queue will process [module:work.TaskQueue#maxConcurrent](module:work.TaskQueue#maxConcurrent) tasks at a time.  * Each task comprises a name, [deferred](https://github.com/kriskowal/q/wiki/API-Reference#qdefer) and  l ist  *of resolvers - each of which will race to settle the deferred first.
+A first-in-first-out async task queue. Fill the queue with [Task](#module_work.Task) instances (using [module:work.TaskQueue#push](module:work.TaskQueue#push)) then (when ready) call [module:work.TaskQueue#process](module:work.TaskQueue#process) to settle each task in the order they were received. During processing, the queue will process [module:work.TaskQueue#maxConcurrent](module:work.TaskQueue#maxConcurrent) tasks at a time. Each task comprises a name, [deferred](https://github.com/kriskowal/q/wiki/API-Reference#qdefer) and list of resolvers - each of which will race to settle the deferred first.
 
 **Example**  
 ```js
@@ -50,8 +50,57 @@ queue.process()
 ```
 
 * [work](#module_work)
-  * [.Queue](#module_work.Queue)
+    * [.Queue](#module_work.Queue)
+        * [new Queue([options])](#new_module_work.Queue_new)
+        * [.name](#module_work.Queue.Queue+name) : <code>string</code>
+        * [.queued](#module_work.Queue.Queue+queued) : <code>Array</code>
+        * [.active](#module_work.Queue.Queue+active) : <code>Array</code>
+        * [.maxConcurrent](#module_work.Queue.Queue+maxConcurrent) : <code>number</code>
+        * [.length](#module_work.Queue+length) : <code>number</code>
+        * [.freeSlotCount](#module_work.Queue+freeSlotCount) : <code>number</code>
+        * [.push(task)](#module_work.Queue+push) ⇒ <code>[Task](#module_work.Task)</code>
+        * [.shift()](#module_work.Queue+shift) ⇒ <code>[Task](#module_work.Task)</code>
+        * [.process()](#module_work.Queue+process)
+        * [.unshift(newTask)](#module_work.Queue+unshift) ⇒ <code>[Task](#module_work.Task)</code>
+        * [.cancel()](#module_work.Queue+cancel) ⇒ <code>[Task](#module_work.Task)</code>
+        * [.isEmpty()](#module_work.Queue+isEmpty) ⇒
+        * ["occupied"](#module_work.Queue+event_occupied)
+        * ["push"](#module_work.Queue+event_push)
+        * ["empty"](#module_work.Queue+event_empty)
+        * ["complete"](#module_work.Queue+event_complete)
+        * ["shift"](#module_work.Queue+event_shift)
+        * ["occupied"](#module_work.Queue+event_occupied)
+        * ["unshift"](#module_work.Queue+event_unshift)
+        * ["empty"](#module_work.Queue+event_empty)
+        * ["cancel"](#module_work.Queue+event_cancel)
+    * [.Task](#module_work.Task) ⇐ <code>module:state-machine</code>
+        * [new Task(resolver, [options])](#new_module_work.Task_new)
+        * _instance_
+            * [.promise](#module_work.Task.Task+promise) : <code>external:Promise</code>
+            * [.resolver](#module_work.Task.Task+resolver) : <code>function</code> &#124; <code>Array.&lt;function()&gt;</code>
+            * [.name](#module_work.Task.Task+name) : <code>string</code>
+            * [.data](#module_work.Task.Task+data) : <code>string</code>
+            * [.process()](#module_work.Task+process)
+            * [.cancel()](#module_work.Task+cancel)
+            * ["fulfilled"](#module_work.Task+event_fulfilled)
+            * ["resolved"](#module_work.Task+event_resolved)
+            * ["rejected"](#module_work.Task+event_rejected)
+            * ["running"](#module_work.Task+event_running)
+        * _static_
+            * [.eState](#module_work.Task.eState) : <code>enum</code>
+
+<a name="module_work.Queue"></a>
+### tq.Queue
+queue class for processing promises
+
+**Kind**: static class of <code>[work](#module_work)</code>  
+
+* [.Queue](#module_work.Queue)
     * [new Queue([options])](#new_module_work.Queue_new)
+    * [.name](#module_work.Queue.Queue+name) : <code>string</code>
+    * [.queued](#module_work.Queue.Queue+queued) : <code>Array</code>
+    * [.active](#module_work.Queue.Queue+active) : <code>Array</code>
+    * [.maxConcurrent](#module_work.Queue.Queue+maxConcurrent) : <code>number</code>
     * [.length](#module_work.Queue+length) : <code>number</code>
     * [.freeSlotCount](#module_work.Queue+freeSlotCount) : <code>number</code>
     * [.push(task)](#module_work.Queue+push) ⇒ <code>[Task](#module_work.Task)</code>
@@ -69,43 +118,6 @@ queue.process()
     * ["unshift"](#module_work.Queue+event_unshift)
     * ["empty"](#module_work.Queue+event_empty)
     * ["cancel"](#module_work.Queue+event_cancel)
-  * [.Task](#module_work.Task) ⇐ <code>module:state-machine</code>
-    * [new Task(resolver, [options])](#new_module_work.Task_new)
-    * _instance_
-      * [.process()](#module_work.Task+process)
-      * [.cancel()](#module_work.Task+cancel)
-      * ["fulfilled"](#module_work.Task+event_fulfilled)
-      * ["resolved"](#module_work.Task+event_resolved)
-      * ["rejected"](#module_work.Task+event_rejected)
-      * ["running"](#module_work.Task+event_running)
-    * _static_
-      * [.eState](#module_work.Task.eState) : <code>enum</code>
-
-<a name="module_work.Queue"></a>
-### tq.Queue
-queue class for processing promises
-
-**Kind**: static class of <code>[work](#module_work)</code>  
-
-* [.Queue](#module_work.Queue)
-  * [new Queue([options])](#new_module_work.Queue_new)
-  * [.length](#module_work.Queue+length) : <code>number</code>
-  * [.freeSlotCount](#module_work.Queue+freeSlotCount) : <code>number</code>
-  * [.push(task)](#module_work.Queue+push) ⇒ <code>[Task](#module_work.Task)</code>
-  * [.shift()](#module_work.Queue+shift) ⇒ <code>[Task](#module_work.Task)</code>
-  * [.process()](#module_work.Queue+process)
-  * [.unshift(newTask)](#module_work.Queue+unshift) ⇒ <code>[Task](#module_work.Task)</code>
-  * [.cancel()](#module_work.Queue+cancel) ⇒ <code>[Task](#module_work.Task)</code>
-  * [.isEmpty()](#module_work.Queue+isEmpty) ⇒
-  * ["occupied"](#module_work.Queue+event_occupied)
-  * ["push"](#module_work.Queue+event_push)
-  * ["empty"](#module_work.Queue+event_empty)
-  * ["complete"](#module_work.Queue+event_complete)
-  * ["shift"](#module_work.Queue+event_shift)
-  * ["occupied"](#module_work.Queue+event_occupied)
-  * ["unshift"](#module_work.Queue+event_unshift)
-  * ["empty"](#module_work.Queue+event_empty)
-  * ["cancel"](#module_work.Queue+event_cancel)
 
 <a name="new_module_work.Queue_new"></a>
 #### new Queue([options])
@@ -116,6 +128,27 @@ queue class for processing promises
 | [options.maxConcurrent] | <code>number</code> | <code>1</code> |  |
 | [options.name] | <code>string</code> |  | useful for debugging |
 
+<a name="module_work.Queue.Queue+name"></a>
+#### queue.name : <code>string</code>
+useful for debugging
+
+**Kind**: instance property of <code>[Queue](#module_work.Queue)</code>  
+<a name="module_work.Queue.Queue+queued"></a>
+#### queue.queued : <code>Array</code>
+the current task queue
+
+**Kind**: instance property of <code>[Queue](#module_work.Queue)</code>  
+<a name="module_work.Queue.Queue+active"></a>
+#### queue.active : <code>Array</code>
+The in-progress tasks
+
+**Kind**: instance property of <code>[Queue](#module_work.Queue)</code>  
+<a name="module_work.Queue.Queue+maxConcurrent"></a>
+#### queue.maxConcurrent : <code>number</code>
+when emptying, specifying the max number of tasks which may run simultaneously.
+
+**Kind**: instance property of <code>[Queue](#module_work.Queue)</code>  
+**Default**: <code>1</code>  
 <a name="module_work.Queue+length"></a>
 #### queue.length : <code>number</code>
 queue length
@@ -238,16 +271,20 @@ A task defines a piece of work which needs doing now, or in the future. When you
 **Extends:** <code>module:state-machine</code>  
 
 * [.Task](#module_work.Task) ⇐ <code>module:state-machine</code>
-  * [new Task(resolver, [options])](#new_module_work.Task_new)
-  * _instance_
-    * [.process()](#module_work.Task+process)
-    * [.cancel()](#module_work.Task+cancel)
-    * ["fulfilled"](#module_work.Task+event_fulfilled)
-    * ["resolved"](#module_work.Task+event_resolved)
-    * ["rejected"](#module_work.Task+event_rejected)
-    * ["running"](#module_work.Task+event_running)
-  * _static_
-    * [.eState](#module_work.Task.eState) : <code>enum</code>
+    * [new Task(resolver, [options])](#new_module_work.Task_new)
+    * _instance_
+        * [.promise](#module_work.Task.Task+promise) : <code>external:Promise</code>
+        * [.resolver](#module_work.Task.Task+resolver) : <code>function</code> &#124; <code>Array.&lt;function()&gt;</code>
+        * [.name](#module_work.Task.Task+name) : <code>string</code>
+        * [.data](#module_work.Task.Task+data) : <code>string</code>
+        * [.process()](#module_work.Task+process)
+        * [.cancel()](#module_work.Task+cancel)
+        * ["fulfilled"](#module_work.Task+event_fulfilled)
+        * ["resolved"](#module_work.Task+event_resolved)
+        * ["rejected"](#module_work.Task+event_rejected)
+        * ["running"](#module_work.Task+event_running)
+    * _static_
+        * [.eState](#module_work.Task.eState) : <code>enum</code>
 
 <a name="new_module_work.Task_new"></a>
 #### new Task(resolver, [options])
@@ -259,6 +296,26 @@ A task defines a piece of work which needs doing now, or in the future. When you
 | [options.name] | <code>string</code> | a name string, useful for debugging |
 | [options.data] | <code>object</code> | data used by the resolver function |
 
+<a name="module_work.Task.Task+promise"></a>
+#### task.promise : <code>external:Promise</code>
+a promise for the completion of the task
+
+**Kind**: instance property of <code>[Task](#module_work.Task)</code>  
+<a name="module_work.Task.Task+resolver"></a>
+#### task.resolver : <code>function</code> &#124; <code>Array.&lt;function()&gt;</code>
+One or more functions to resolve the deferred. Each resolver function will be passed the deferred, which it must either resolve or reject.
+
+**Kind**: instance property of <code>[Task](#module_work.Task)</code>  
+<a name="module_work.Task.Task+name"></a>
+#### task.name : <code>string</code>
+useful for debug output
+
+**Kind**: instance property of <code>[Task](#module_work.Task)</code>  
+<a name="module_work.Task.Task+data"></a>
+#### task.data : <code>string</code>
+data for the task
+
+**Kind**: instance property of <code>[Task](#module_work.Task)</code>  
 <a name="module_work.Task+process"></a>
 #### task.process()
 Process the task - settled the deferred using the supplied resolver function(s). The resolver function is called in the context of the task and receives a `deferred`, which must be resolved.
