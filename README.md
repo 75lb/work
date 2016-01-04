@@ -38,7 +38,7 @@ var task = new tq.Task({
 
 queue.push(task)
 
-task.deferred.promise
+task.promise
 	.then(function(result){
 		console.log(result)
 	})
@@ -58,7 +58,7 @@ queue.process()
         * [.maxConcurrent](#module_work.Queue.Queue+maxConcurrent) : <code>number</code>
         * [.length](#module_work.Queue+length) : <code>number</code>
         * [.freeSlotCount](#module_work.Queue+freeSlotCount) : <code>number</code>
-        * [.push(task)](#module_work.Queue+push) ⇒ <code>[Task](#module_work.Task)</code>
+        * [.push(task)](#module_work.Queue+push) ↩︎
         * [.shift()](#module_work.Queue+shift) ⇒ <code>[Task](#module_work.Task)</code>
         * [.process()](#module_work.Queue+process)
         * [.unshift(newTask)](#module_work.Queue+unshift) ⇒ <code>[Task](#module_work.Task)</code>
@@ -74,12 +74,11 @@ queue.process()
         * ["empty"](#module_work.Queue+event_empty)
         * ["cancel"](#module_work.Queue+event_cancel)
     * [.Task](#module_work.Task) ⇐ <code>module:state-machine</code>
-        * [new Task(resolver, [options])](#new_module_work.Task_new)
+        * [new Task(executor, [options])](#new_module_work.Task_new)
         * _instance_
             * [.promise](#module_work.Task.Task+promise) : <code>external:Promise</code>
-            * [.resolver](#module_work.Task.Task+resolver) : <code>function</code> &#124; <code>Array.&lt;function()&gt;</code>
             * [.name](#module_work.Task.Task+name) : <code>string</code>
-            * [.data](#module_work.Task.Task+data) : <code>string</code>
+            * [.context](#module_work.Task.Task+context) : <code>string</code>
             * [.process()](#module_work.Task+process)
             * [.cancel()](#module_work.Task+cancel)
             * ["fulfilled"](#module_work.Task+event_fulfilled)
@@ -103,7 +102,7 @@ queue class for processing promises
     * [.maxConcurrent](#module_work.Queue.Queue+maxConcurrent) : <code>number</code>
     * [.length](#module_work.Queue+length) : <code>number</code>
     * [.freeSlotCount](#module_work.Queue+freeSlotCount) : <code>number</code>
-    * [.push(task)](#module_work.Queue+push) ⇒ <code>[Task](#module_work.Task)</code>
+    * [.push(task)](#module_work.Queue+push) ↩︎
     * [.shift()](#module_work.Queue+shift) ⇒ <code>[Task](#module_work.Task)</code>
     * [.process()](#module_work.Queue+process)
     * [.unshift(newTask)](#module_work.Queue+unshift) ⇒ <code>[Task](#module_work.Task)</code>
@@ -158,10 +157,11 @@ queue length
 #### queue.freeSlotCount : <code>number</code>
 **Kind**: instance property of <code>[Queue](#module_work.Queue)</code>  
 <a name="module_work.Queue+push"></a>
-#### queue.push(task) ⇒ <code>[Task](#module_work.Task)</code>
+#### queue.push(task) ↩︎
 add a task to the end of the queue
 
 **Kind**: instance method of <code>[Queue](#module_work.Queue)</code>  
+**Chainable**  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -177,6 +177,10 @@ returns the next task in the queue and adds it to the `active` list.
 process the queue - attempt to resolve each task.
 
 **Kind**: instance method of <code>[Queue](#module_work.Queue)</code>  
+**Todo**
+
+- [ ] return a promise which resolves on completion
+
 <a name="module_work.Queue+unshift"></a>
 #### queue.unshift(newTask) ⇒ <code>[Task](#module_work.Task)</code>
 insert a task at the front of the queue, returning the instance inserted
@@ -271,12 +275,11 @@ A task defines a piece of work which needs doing now, or in the future. When you
 **Extends:** <code>module:state-machine</code>  
 
 * [.Task](#module_work.Task) ⇐ <code>module:state-machine</code>
-    * [new Task(resolver, [options])](#new_module_work.Task_new)
+    * [new Task(executor, [options])](#new_module_work.Task_new)
     * _instance_
         * [.promise](#module_work.Task.Task+promise) : <code>external:Promise</code>
-        * [.resolver](#module_work.Task.Task+resolver) : <code>function</code> &#124; <code>Array.&lt;function()&gt;</code>
         * [.name](#module_work.Task.Task+name) : <code>string</code>
-        * [.data](#module_work.Task.Task+data) : <code>string</code>
+        * [.context](#module_work.Task.Task+context) : <code>string</code>
         * [.process()](#module_work.Task+process)
         * [.cancel()](#module_work.Task+cancel)
         * ["fulfilled"](#module_work.Task+event_fulfilled)
@@ -287,11 +290,11 @@ A task defines a piece of work which needs doing now, or in the future. When you
         * [.eState](#module_work.Task.eState) : <code>enum</code>
 
 <a name="new_module_work.Task_new"></a>
-#### new Task(resolver, [options])
+#### new Task(executor, [options])
 
 | Param | Type | Description |
 | --- | --- | --- |
-| resolver | <code>function</code> &#124; <code>Array.&lt;function()&gt;</code> | the resolver function |
+| executor | <code>function</code> &#124; <code>Array.&lt;function()&gt;</code> | the resolver function |
 | [options] | <code>object</code> | an object containing optional values |
 | [options.name] | <code>string</code> | a name string, useful for debugging |
 | [options.data] | <code>object</code> | data used by the resolver function |
@@ -301,18 +304,13 @@ A task defines a piece of work which needs doing now, or in the future. When you
 a promise for the completion of the task
 
 **Kind**: instance property of <code>[Task](#module_work.Task)</code>  
-<a name="module_work.Task.Task+resolver"></a>
-#### task.resolver : <code>function</code> &#124; <code>Array.&lt;function()&gt;</code>
-One or more functions to resolve the deferred. Each resolver function will be passed the deferred, which it must either resolve or reject.
-
-**Kind**: instance property of <code>[Task](#module_work.Task)</code>  
 <a name="module_work.Task.Task+name"></a>
 #### task.name : <code>string</code>
 useful for debug output
 
 **Kind**: instance property of <code>[Task](#module_work.Task)</code>  
-<a name="module_work.Task.Task+data"></a>
-#### task.data : <code>string</code>
+<a name="module_work.Task.Task+context"></a>
+#### task.context : <code>string</code>
 data for the task
 
 **Kind**: instance property of <code>[Task](#module_work.Task)</code>  
