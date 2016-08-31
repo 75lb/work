@@ -14,13 +14,13 @@
     "docs": "jsdoc2md -t jsdoc2md/README.hbs lib/*.js > README.md; echo"
   },
   "dependencies": {
-    "array-back": "^1.0.2",
-    "defer-promise": "^0.1.1",
+    "array-back": "^1.0.3",
+    "defer-promise": "^1.0.0",
     "fsm-base": "^0.1.0",
-    "promise.prototype.finally": "^1.0.1"
+    "promise.prototype.finally": "^2.0.0"
   },
   "devDependencies": {
-    "jsdoc-to-markdown": "^1.2",
-    "tape": "^4"
+    "jsdoc-to-markdown": "^2.0.0-alpha",
+    "tape": "^4.6.0"
   }
 }
