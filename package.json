@@ -7,20 +7,20 @@
   "main": "./lib/work.js",
   "license": "MIT",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=4"
   },
   "scripts": {
     "test": "tape test/*.js",
     "docs": "jsdoc2md -t jsdoc2md/README.hbs lib/*.js > README.md; echo"
   },
   "dependencies": {
-    "array-back": "^1.0.3",
-    "defer-promise": "^1.0.0",
-    "fsm-base": "^0.1.0",
-    "promise.prototype.finally": "^2.0.0"
+    "array-back": "^2.0.0",
+    "defer-promise": "^1.0.1",
+    "fsm-base": "^0.2.0",
+    "promise.prototype.finally": "^3.1.0"
   },
   "devDependencies": {
-    "jsdoc-to-markdown": "^2.0.0-alpha",
-    "tape": "^4.6.0"
+    "jsdoc-to-markdown": "^4.0.1",
+    "tape": "^4.8.0"
   }
 }
