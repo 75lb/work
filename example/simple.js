@@ -1,7 +1,7 @@
-const Queue = require('../')
+const Queue = require('../').Queue
 const defer = require('defer-promise')
 
-var queue = new Queue({ maxConcurrent: 2 })
+const queue = new Queue({ maxConcurrent: 2 })
 
 /* get the football results - it will take between 0 and 2000ms */
 function resultResolver (deferred) {
@@ -17,7 +17,7 @@ function timeoutResolver (deferred) {
   }, 1000)
 }
 
-var deferred = defer()
+const deferred = defer()
 
 queue.push({ name: 'get result', deferred: deferred, resolver: [ resultResolver, timeoutResolver ] })
 

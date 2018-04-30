@@ -1,8 +1,8 @@
 'use strict'
-const Queue = require('./queue')
-const Task = require('./task')
-const Command = require('./command')
-const CommandQueue = require('./command-queue')
+const Queue = require('./lib/queue')
+const Task = require('./lib/task')
+const Command = require('./lib/command')
+const CommandQueue = require('./lib/command-queue')
 
 /**
  * A Command class and Invoker queue class, both observable.
