@@ -13,22 +13,28 @@ function createJob (ms, result) {
 }
 
 tom.test('.process(): maxConcurrency 1', async function () {
-  const queue = new Queue([
-    createJob(30, 1),
-    createJob(20, 1.1),
-    createJob(50, 1.2)
-  ], 1)
+  const queue = new Queue({
+    jobs: [
+      createJob(30, 1),
+      createJob(20, 1.1),
+      createJob(50, 1.2)
+    ],
+    maxConcurrency: 1
+  })
 
   const results = await queue.process()
   a.deepEqual(results, [1, 1.1, 1.2])
 })
 
 tom.test('.process(): maxConcurrency 3, results still in job order', async function () {
-  const queue = new Queue([
-    createJob(50, 1),
-    createJob(20, 1.1),
-    createJob(100, 1.2)
-  ], 3)
+  const queue = new Queue({
+    jobs: [
+      createJob(50, 1),
+      createJob(20, 1.1),
+      createJob(100, 1.2)
+    ],
+    maxConcurrency: 3
+  })
 
   const results = await queue.process()
   a.deepEqual(results, [1, 1.1, 1.2])
@@ -36,31 +42,37 @@ tom.test('.process(): maxConcurrency 3, results still in job order', async funct
 
 tom.test('.process(): maxConcurrency 3, job finish order correct', async function () {
   const actuals = []
-  const queue = new Queue([
-    async function () {
-      await sleep(50)
-      actuals.push(1)
-    },
-    async function () {
-      await sleep(20)
-      actuals.push(1.1)
-    },
-    async function () {
-      await sleep(100)
-      actuals.push(1.2)
-    }
-  ], 3)
+  const queue = new Queue({
+    jobs: [
+      async function () {
+        await sleep(50)
+        actuals.push(1)
+      },
+      async function () {
+        await sleep(20)
+        actuals.push(1.1)
+      },
+      async function () {
+        await sleep(100)
+        actuals.push(1.2)
+      }
+    ],
+    maxConcurrency: 3
+  })
 
   const results = await queue.process()
   a.deepEqual(actuals, [1.1, 1, 1.2])
 })
 
 tom.test('iterator: maxConcurrency 1', async function () {
-  const queue = new Queue([
-    createJob(30, 1),
-    createJob(20, 1.1),
-    createJob(50, 1.2)
-  ], 1)
+  const queue = new Queue({
+    jobs: [
+      createJob(30, 1),
+      createJob(20, 1.1),
+      createJob(50, 1.2)
+    ],
+    maxConcurrency: 1
+  })
 
   const results = []
   for await (const result of queue) {
@@ -70,11 +82,14 @@ tom.test('iterator: maxConcurrency 1', async function () {
 })
 
 tom.test('iterator: maxConcurrency 3, results still in job order', async function () {
-  const queue = new Queue([
-    createJob(30, 1),
-    createJob(20, 1.1),
-    createJob(50, 1.2)
-  ], 3)
+  const queue = new Queue({
+    jobs: [
+      createJob(30, 1),
+      createJob(20, 1.1),
+      createJob(50, 1.2)
+    ],
+    maxConcurrency: 3
+  })
 
   const results = []
   for await (const result of queue) {

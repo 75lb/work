@@ -2,27 +2,36 @@ const _maxConcurrency = new WeakMap()
 
 class Queue {
   /**
-   * @param {function[]} jobs - An array of functions, each of which must return a Promise.
-   * @param {number} maxConcurrency
+   * @param {object} options
+   * @param {function[]} options.jobs - An array of functions, each of which must return a Promise.
+   * @param {number} options.maxConcurrency
    */
-  constructor (jobs, maxConcurrency, skipAfter) {
+  constructor (options) {
+    options = Object.assign({
+      jobs: [],
+      maxConcurrency: 10,
+      skipAfter: false
+    }, options)
     this.jobs = []
     this.jobStats = {
       total: 0,
       complete: 0,
       active: 0
     }
-    this.maxConcurrency = maxConcurrency || 10
+    this.maxConcurrency = options.maxConcurrency
     /**
      * Store arbitrary data here.
      */
     this.data = null
     this.result = null
-    for (const job of jobs) {
+    for (const job of options.jobs) {
       this.add(job)
     }
 
-    if (!skipAfter) this.after = new Queue([], maxConcurrency, true)
+    //TODO .addAfter method which incrememts jobStats.total
+    if (!options.skipAfter) {
+      this.after = new Queue({ maxConcurrency: options.maxConcurrency, skipAfter: true })
+    }
   }
 
   get maxConcurrency () {
@@ -44,7 +53,6 @@ class Queue {
    * Iterate over `jobs` invoking no more than `maxConcurrency` at once. Yield results on receipt.
    */
   async * [Symbol.asyncIterator] () {
-    const output = []
     while (this.jobs.length) {
       const slotsAvailable = this.maxConcurrency - this.jobStats.active
       if (slotsAvailable > 0) {
@@ -71,21 +79,8 @@ class Queue {
 
   async process () {
     const output = []
-    while (this.jobs.length) {
-      const slotsAvailable = this.maxConcurrency - this.jobStats.active
-      if (slotsAvailable > 0) {
-        const toRun = []
-        for (let i = 0; i < slotsAvailable; i++) {
-          const job = this.jobs.shift()
-          if (job) {
-            toRun.push(job())
-            this.jobStats.active++
-          }
-        }
-        const results = await Promise.all(toRun)
-        this.jobStats.active -= results.length
-        output.push(...results)
-      }
+    for await (const result of this) {
+      output.push(result)
     }
     return output
   }
