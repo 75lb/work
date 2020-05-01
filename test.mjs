@@ -26,6 +26,32 @@ tom.test('.process(): maxConcurrency 1', async function () {
   a.deepEqual(results, [1, 1.1, 1.2])
 })
 
+tom.test('.process(): events', async function () {
+  const actuals = []
+  const queue = new Queue({
+    jobs: [
+      createJob(1),
+      createJob(1),
+      createJob(1)
+    ],
+    maxConcurrency: 1
+  })
+
+  queue.on((eventName) => {
+    actuals.push([ eventName, Object.assign({}, queue.jobStats) ])
+  })
+
+  await queue.process()
+  a.deepEqual(actuals, [
+    [ 'job-start', { total: 3, complete: 0, active: 1 } ],
+    [ 'job-end', { total: 3, complete: 1, active: 0 } ],
+    [ 'job-start', { total: 3, complete: 1, active: 1 } ],
+    [ 'job-end', { total: 3, complete: 2, active: 0 } ],
+    [ 'job-start', { total: 3, complete: 2, active: 1 } ],
+    [ 'job-end', { total: 3, complete: 3, active: 0 } ]
+  ])
+})
+
 tom.test('.process(): maxConcurrency 3, results still in job order', async function () {
   const queue = new Queue({
     jobs: [

@@ -2,23 +2,29 @@
   "name": "work",
   "author": "Lloyd Brookes <75pound@gmail.com>",
   "version": "0.5.0",
-  "description": "work",
+  "description": "Isomorphic, async iterable command queue",
   "repository": "https://github.com/75lb/work",
   "license": "MIT",
   "engines": {
     "node": ">=10"
   },
   "scripts": {
-    "test": "esm-runner test.mjs",
+    "test": "npm run dist && esm-runner test.mjs",
     "docs": "jsdoc2md -t jsdoc2md/README.hbs index.mjs > README.md; echo",
     "dist": "rollup -c"
   },
-  "dependencies": {},
+  "dependencies": {
+    "obso": "^0.6.0"
+  },
   "devDependencies": {
     "esm-runner": "^0.3.4",
     "jsdoc-to-markdown": "^5.0.3",
-    "rollup": "^2.6.1",
+    "rollup": "^2.7.6",
+    "rollup-plugin-node-resolve": "^5.2.0",
     "sleep-anywhere": "^1.1.3",
     "test-runner": "^0.8.13"
-  }
+  },
+  "files": [
+    "index.mjs"
+  ]
 }

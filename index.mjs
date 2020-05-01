@@ -1,12 +1,16 @@
+import Emitter from 'obso/index.mjs'
 const _maxConcurrency = new WeakMap()
 
-class Queue {
+class Queue extends Emitter {
   /**
    * @param {object} options
    * @param {function[]} options.jobs - An array of functions, each of which must return a Promise.
    * @param {number} options.maxConcurrency
+   * @emits job-start
+   * @emits job-end
    */
   constructor (options) {
+    super()
     options = Object.assign({
       jobs: [],
       maxConcurrency: 10,
@@ -60,13 +64,18 @@ class Queue {
         for (let i = 0; i < slotsAvailable; i++) {
           const job = this.jobs.shift()
           if (job) {
-            toRun.push(job())
             this.jobStats.active++
+            this.emit('job-start')
+            const jobPromise = job().then(result => {
+              this.jobStats.active -= 1
+              this.jobStats.complete += 1
+              this.emit('job-end')
+              return result
+            })
+            toRun.push(jobPromise)
           }
         }
         const results = await Promise.all(toRun)
-        this.jobStats.active -= results.length
-        this.jobStats.complete += results.length
         for (const result of results) {
           yield result
         }
