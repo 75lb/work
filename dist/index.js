@@ -140,6 +140,8 @@
      * @param {object} options
      * @param {function[]} options.jobs - An array of functions, each of which must return a Promise.
      * @param {number} options.maxConcurrency
+     * @emits job-start
+     * @emits job-end
      */
     constructor (options) {
       super();
@@ -189,6 +191,7 @@
      * Iterate over `jobs` invoking no more than `maxConcurrency` at once. Yield results on receipt.
      */
     async * [Symbol.asyncIterator] () {
+      this.emit('start');
       while (this.jobs.length) {
         const slotsAvailable = this.maxConcurrency - this.jobStats.active;
         if (slotsAvailable > 0) {
@@ -216,6 +219,7 @@
       if (this.after) {
         yield * this.after;
       }
+      this.emit('end');
     }
 
     async process () {

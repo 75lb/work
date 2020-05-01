@@ -57,6 +57,7 @@ class Queue extends Emitter {
    * Iterate over `jobs` invoking no more than `maxConcurrency` at once. Yield results on receipt.
    */
   async * [Symbol.asyncIterator] () {
+    this.emit('start')
     while (this.jobs.length) {
       const slotsAvailable = this.maxConcurrency - this.jobStats.active
       if (slotsAvailable > 0) {
@@ -84,6 +85,7 @@ class Queue extends Emitter {
     if (this.after) {
       yield * this.after
     }
+    this.emit('end')
   }
 
   async process () {

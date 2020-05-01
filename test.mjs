@@ -43,12 +43,14 @@ tom.test('.process(): events', async function () {
 
   await queue.process()
   a.deepEqual(actuals, [
+    [ 'start', { total: 3, complete: 0, active: 0 } ],
     [ 'job-start', { total: 3, complete: 0, active: 1 } ],
     [ 'job-end', { total: 3, complete: 1, active: 0 } ],
     [ 'job-start', { total: 3, complete: 1, active: 1 } ],
     [ 'job-end', { total: 3, complete: 2, active: 0 } ],
     [ 'job-start', { total: 3, complete: 2, active: 1 } ],
-    [ 'job-end', { total: 3, complete: 3, active: 0 } ]
+    [ 'job-end', { total: 3, complete: 3, active: 0 } ],
+    [ 'end', { total: 3, complete: 3, active: 0 } ]
   ])
 })
 
