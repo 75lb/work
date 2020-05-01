@@ -195,7 +195,11 @@ class Queue extends Emitter {
           if (job) {
             this.jobStats.active++;
             this.emit('job-start');
-            const jobPromise = job().then(result => {
+            const jobResult = job();
+            const jobPromise = jobResult.then && jobResult.catch
+              ? jobResult
+              : Promise.resolve(jobResult);
+            jobPromise.then(result => {
               this.jobStats.active -= 1;
               this.jobStats.complete += 1;
               this.emit('job-end');

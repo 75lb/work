@@ -126,4 +126,12 @@ tom.test('iterator: maxConcurrency 3, results still in job order', async functio
   a.deepEqual(results, [1, 1.1, 1.2])
 })
 
+tom.test('sync jobs', async function () {
+  const queue = new Queue()
+  queue.add(function () { return 1 })
+  queue.add(function () { return 2 })
+  const result = await queue.process()
+  a.deepEqual(result, [1, 2])
+})
+
 export default tom
