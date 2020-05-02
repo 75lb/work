@@ -9,12 +9,13 @@
     "node": ">=10"
   },
   "scripts": {
-    "test": "npm run dist && esm-runner test.mjs",
+    "test": "npm run dist && esm-runner test/*.mjs",
     "docs": "jsdoc2md -t jsdoc2md/README.hbs index.mjs > README.md; echo",
     "dist": "rollup -c"
   },
   "dependencies": {
-    "obso": "^0.6.0"
+    "obso": "^0.6.0",
+    "typical": "^6.0.0"
   },
   "devDependencies": {
     "esm-runner": "^0.3.4",
