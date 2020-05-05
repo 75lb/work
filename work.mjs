@@ -1,5 +1,5 @@
 import Emitter from 'obso/index.mjs'
-import Queue from './index.mjs'
+import Queue from './queue.mjs'
 import t from 'typical/index.mjs'
 
 class Work extends Emitter {
@@ -19,8 +19,10 @@ class Work extends Emitter {
   }
 
   async process (node) {
-    debugger
     node = node || this.strategy
+    if ('condition' in node && !node.condition) {
+      return
+    }
     node = Object.assign({
       maxConcurrency: 1,
       args: []
@@ -29,7 +31,7 @@ class Work extends Emitter {
       if (node.maxConcurrency === 1) {
         if (Array.isArray(node.jobs)) {
           for (const job of node.jobs) {
-            this.process(job)
+            await this.process(job)
           }
         } else if (t.isPlainObject(node.jobs)) {
           let firstJob
@@ -41,7 +43,7 @@ class Work extends Emitter {
             }
           }
           firstJob.parentJobs = node.jobs
-          this.process(firstJob)
+          await this.process(firstJob)
         } else {
           throw new Error('invalid jobs type')
         }
@@ -49,7 +51,7 @@ class Work extends Emitter {
         const queue = new Queue({ maxConcurrency: node.maxConcurrency })
         for (const job of node.jobs) {
           queue.add(async () => {
-            this.process(job)
+            await this.process(job)
           })
         }
         await queue.process()
@@ -57,29 +59,31 @@ class Work extends Emitter {
     } else {
       const jobFn = this.jobs[node.name]
       try {
-        // console.log('TRY', node.name)
-        jobFn(...node.args)
+        // console.log('TRY', node.name, ...node.args)
+        await jobFn(...node.args)
         if (node.parentJobs && node.success) {
           const job = node.parentJobs[node.success]
           job.name = node.success
           job.parentJobs = node.parentJobs
-          this.process(job)
+          await this.process(job)
         }
       } catch (err) {
-        // console.log('ERR', node.name, err.message)
+        // console.log('ERR', node.name, ...node.args, err.message)
         if (node.parentJobs && node.fail) {
           const job = node.parentJobs[node.fail]
           job.name = node.fail
           job.parentJobs = node.parentJobs
-          this.process(job)
+          await this.process(job)
+        } else {
+          throw err
         }
       } finally {
-        // console.log('FIN', node.name)
+        // console.log('FIN', node.name, ...node.args)
         if (node.parentJobs && node.next) {
           const job = node.parentJobs[node.next]
           job.name = node.next
           job.parentJobs = node.parentJobs
-          this.process(job)
+          await this.process(job)
         }
       }
     }

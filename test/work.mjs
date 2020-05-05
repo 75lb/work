@@ -1,5 +1,5 @@
 import TestRunner from 'test-runner'
-import Work from '../work.mjs'
+import { Work } from '../index.mjs'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'
 const a = assert.strict
@@ -53,22 +53,22 @@ tom.test('work strategy', async function () {
   }
 
   work.jobs = {
-    'fetch-from-cache': function (...args) {
+    'fetch-from-cache': async function (...args) {
       console.log('fetch-from-cache', ...args)
       if (args[0] === 'repos') {
         throw new Error('repos not found in cache')
       }
     },
-    'fetch-user-from-remote': function (...args) {
+    'fetch-user-from-remote': async function (...args) {
       console.log('fetch-user-from-remote', ...args)
     },
-    'fetch-repos-from-remote': function (...args) {
+    'fetch-repos-from-remote': async function (...args) {
       console.log('fetch-repos-from-remote', ...args)
     },
-    'fetch-packages-from-remote': function (...args) {
+    'fetch-packages-from-remote': async function (...args) {
       console.log('fetch-packages-from-remote', ...args)
     },
-    'update-cache': function (...args) {
+    'update-cache': async function (...args) {
       console.log('update-cache', ...args)
     },
     'display-data': function (...args) {

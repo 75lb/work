@@ -1,5 +1,5 @@
 import TestRunner from 'test-runner'
-import Queue from '../index.mjs'
+import { Queue } from '../index.mjs'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'
 const a = assert.strict
