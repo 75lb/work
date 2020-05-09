@@ -6,7 +6,7 @@ const a = assert.strict
 
 const tom = new TestRunner.Tom()
 
-tom.test('work strategy', async function () {
+tom.only('work strategy', async function () {
   const work = new Work()
   work.name = 'Page builder'
   work.data = {
@@ -20,12 +20,12 @@ tom.test('work strategy', async function () {
     jobs: [
       {
         name: 'collect-data',
-        maxConcurrency: 3,
+        maxConcurrency: 1,
         jobs: [
           {
             name: 'collect-user',
             jobs: {
-              'fetch-from-cache': { first: true, args: ['user'], fail: 'fetch-user-from-remote' },
+              fetchFromCache: { first: true, args: ['user'], fail: 'fetch-user-from-remote' },
               'fetch-user-from-remote': { success: 'update-cache' },
               'update-cache': { args: ['user'] }
             }
@@ -33,7 +33,7 @@ tom.test('work strategy', async function () {
           {
             name: 'collect-repos',
             jobs: {
-              'fetch-from-cache': { first: true, args: ['repos'], fail: 'fetch-repos-from-remote' },
+              fetchFromCache: { first: true, args: ['repos'], fail: 'fetch-repos-from-remote' },
               'fetch-repos-from-remote': { success: 'update-cache' },
               'update-cache': { args: ['repos'] }
             }
@@ -41,20 +41,31 @@ tom.test('work strategy', async function () {
           {
             name: 'collect-packages',
             jobs: {
-              'fetch-from-cache': { first: true, args: ['packages'], fail: 'fetch-packages-from-remote' },
+              fetchFromCache: { first: true, args: ['packages'], fail: 'fetch-packages-from-remote' },
               'fetch-packages-from-remote': { success: 'update-cache' },
               'update-cache': { args: ['packages'] }
+            }
+          },
+          {
+            name: 'template',
+            repeatForEach: function () {
+              return ['one', 'two']
+            },
+            template: function (item) {
+              return {
+                name: item
+              }
             }
           }
         ]
       },
-      { name: 'display-data' }
+      { name: 'displayData' }
     ]
   }
 
   work.jobs = {
-    'fetch-from-cache': async function (...args) {
-      console.log('fetch-from-cache', ...args)
+    fetchFromCache: async function (...args) {
+      console.log('fetchFromCache', ...args)
       if (args[0] === 'repos') {
         throw new Error('repos not found in cache')
       }
@@ -71,12 +82,18 @@ tom.test('work strategy', async function () {
     'update-cache': async function (...args) {
       console.log('update-cache', ...args)
     },
-    'display-data': function (...args) {
-      console.log('display-data', ...args)
+    displayData: function (...args) {
+      console.log('displayData', ...args)
     },
+    one: function () {
+      console.log('ONE')
+    },
+    two: function () {
+      console.log('TWO')
+    }
   }
 
-  work.process()
+  await work.process()
 })
 
 export default tom

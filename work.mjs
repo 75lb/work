@@ -27,10 +27,16 @@ class Work extends Emitter {
       maxConcurrency: 1,
       args: []
     }, node)
-    if (node.jobs) {
+    if (node.template) {
+      for (const item of node.repeatForEach()) {
+        node.parentJobs.push(node.template(item))
+        // console.log(node.parentJobs)
+      }
+    } else if (node.jobs) {
       if (node.maxConcurrency === 1) {
         if (Array.isArray(node.jobs)) {
           for (const job of node.jobs) {
+            job.parentJobs = node.jobs
             await this.process(job)
           }
         } else if (t.isPlainObject(node.jobs)) {
@@ -50,6 +56,7 @@ class Work extends Emitter {
       } else {
         const queue = new Queue({ maxConcurrency: node.maxConcurrency })
         for (const job of node.jobs) {
+          job.parentJobs = node.jobs
           queue.add(async () => {
             await this.process(job)
           })
