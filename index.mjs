@@ -1,4 +1,6 @@
-import Queue from './queue.mjs'
-import Work from './work.mjs'
+import Queue from './lib/queue.mjs'
+import Work from './lib/work.mjs'
+import Job from './lib/job.mjs'
+import Planner from './lib/planner.mjs'
 
-export { Queue, Work }
+export { Queue, Work, Job, Planner }
