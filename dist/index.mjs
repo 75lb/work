@@ -1111,11 +1111,11 @@ class Work extends Emitter$1 {
 }
 
 class Job extends createMixin(Composite)(StateMachine) {
-  constructor (jobFn, options = {}) {
+  constructor (fn, options = {}) {
     super();
-    this.fn = jobFn;
+    this.fn = fn;
     this.name = options.name;
-    this.args = options.args || [];
+    this.args = arrayify(options.args);
     this.onFailQueue = options.onFailQueue;
     this.onSuccessQueue = options.onSuccessQueue;
   }
@@ -1136,12 +1136,20 @@ class Planner {
   }
 
   toModel (plan) {
-    if (plan.type === 'job') {
-      if (plan.invoke) {
-        const fn = this.service.default[plan.invoke];
-        const node = new Job(fn);
-        return node
+    if (plan.type === 'job' && plan.invoke) {
+      const fn = this.services.default[plan.invoke];
+      const node = new Job(fn, plan);
+      return node
+    } else if (plan.type === 'job' && plan.fn) {
+      const node = new Job(plan.fn, plan);
+      return node
+    } else if (plan.type =  plan.queue) {
+      const queue = new Queue();
+      for (const item of plan.queue) {
+        const node = this.toModel(item);
+        queue.add(node);
       }
+      return queue
     }
   }
 }

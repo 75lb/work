@@ -15,6 +15,7 @@
     "watch": "rollup -cw"
   },
   "dependencies": {
+    "array-back": "^4.0.1",
     "composite-class": "^2.0.1",
     "create-mixin": "^3.0.0",
     "fsm-base": "^0.5.2",

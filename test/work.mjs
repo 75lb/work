@@ -1,12 +1,12 @@
 import TestRunner from 'test-runner'
-import { Work, Job, Queue } from '../index.mjs'
+import { Work, Job, Queue, Planner } from '../index.mjs'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'
 
 const a = assert.strict
 const tom = new TestRunner.Tom()
 
-tom.test('work strategy', async function () {
+tom.todo('work strategy', async function () {
   const work = new Work()
   work.name = 'Page builder'
   work.ctx = {
@@ -98,7 +98,7 @@ tom.test('work strategy', async function () {
   await work.process()
 })
 
-tom.test('test-runner style', async function () {
+tom.todo('test-runner style', async function () {
   const work = new Work()
 
   work.stats = {
@@ -203,38 +203,37 @@ tom.test('test-runner style', async function () {
   await work.process()
 })
 
-tom.only('simple model - job root', async function () {
+tom.test('simple model, job root', async function () {
   const actuals = []
-  const plan = new Job(() => {
+  const root = new Job(() => {
     actuals.push(1)
   })
   const work = new Work()
-  await work.process2(plan)
+  await work.process2(root)
   a.deepEqual(actuals, [1])
 })
 
-tom.only('simple model - queue root', async function () {
+tom.test('simple model, queue root', async function () {
   const actuals = []
-  const plan = new Queue()
-  plan.add(new Job(() => {
+  const root = new Queue()
+  root.add(new Job(() => {
     actuals.push(1)
   }))
   const work = new Work()
-  await work.process2(plan)
+  await work.process2(root)
   a.deepEqual(actuals, [1])
 })
 
-tom.only('simple model - queue root, job names', async function () {
+tom.test('model from planner', async function () {
   const actuals = []
-  const plan = new Queue()
-  plan.add('job1')
-  const work = new Work()
-  work.services.add({
-    job1: new Job(() => {
-      actuals.push(1)
-    })
+  const planner = new Planner()
+  const model = planner.toModel({
+    type: 'job',
+    fn: n => actuals.push(n),
+    args: 1
   })
-  await work.process2(plan)
+  const work = new Work()
+  await work.process2(model)
   a.deepEqual(actuals, [1])
 })
 

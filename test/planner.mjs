@@ -6,20 +6,90 @@ import sleep from 'sleep-anywhere/index.mjs'
 const a = assert.strict
 const tom = new TestRunner.Tom()
 
-tom.test('simple', async function () {
+tom.test('single job invocation', async function () {
   const actuals = []
   const planner = new Planner()
   planner.addService({
-    job1: new Job(() => {
-      actuals.push(1)
-    })
+    job1: n => {
+      actuals.push(n)
+    }
   })
   const result = planner.toModel({
     type: 'job',
-    invoke: 'job1'
+    invoke: 'job1',
+    args: 1
   })
   await result.process()
   a.deepEqual(actuals, [1])
+})
+
+tom.test('single job', async function () {
+  const actuals = []
+  const planner = new Planner()
+  const result = planner.toModel({
+    type: 'job',
+    fn: n => actuals.push(n),
+    args: 1
+  })
+  await result.process()
+  a.deepEqual(actuals, [1])
+})
+
+tom.test('single queue', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    job1: n => {
+      actuals.push(1)
+    }
+  })
+  const result = planner.toModel({
+    type: 'queue',
+    queue: [
+      {
+        type: 'job',
+        invoke: 'job1'
+      },
+      {
+        type: 'job',
+        invoke: 'job1'
+      }
+    ]
+  })
+  await result.process()
+  a.deepEqual(actuals, [1, 1])
+})
+
+tom.test('nested queue', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    job1: n => {
+      actuals.push(n)
+    }
+  })
+  const result = planner.toModel({
+    type: 'queue',
+    queue: [
+      {
+        type: 'job',
+        invoke: 'job1',
+        args: 1
+      },
+      {
+        type: 'queue',
+        queue: [
+          {
+            type: 'job',
+            invoke: 'job1',
+            args: 2
+          }
+        ]
+      }
+    ]
+  })
+  await result.process()
+  a.deepEqual(actuals, [1, 2])
 })
 
 export default tom
