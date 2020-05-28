@@ -129,4 +129,15 @@ tom.test('sync jobs', async function () {
   a.deepEqual(result, [1, 2])
 })
 
+tom.todo('onFail', async function () {
+  const actuals = []
+  const queue = new Queue()
+  queue.add(new Job(() => {
+    throw new Error('broken')
+  }))
+  queue.onFail = new Job(() => { actuals.push(1) })
+  await queue.process()
+  console.log(actuals)
+})
+
 export default tom

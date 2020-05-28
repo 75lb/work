@@ -8,7 +8,6 @@ const tom = new TestRunner.Tom()
 
 tom.todo('work strategy', async function () {
   const work = new Work()
-  work.name = 'Page builder'
   work.ctx = {
     data: {
       githubUser: {},
@@ -31,7 +30,7 @@ tom.todo('work strategy', async function () {
             type: 'invocation',
             invoke: 'fetchFromCache',
             args: ['user'],
-            onFailQueue: {
+            onFail: {
               name: 'failQueue',
               type: 'queue',
               queue: [

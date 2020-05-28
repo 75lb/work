@@ -92,4 +92,28 @@ tom.test('nested queue', async function () {
   a.deepEqual(actuals, [1, 2])
 })
 
+tom.test('template', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    job1: n => actuals.push(n)
+  })
+  const root = planner.toModel({
+    type: 'queue',
+    queue: [
+      {
+        type: 'template',
+        repeatForEach: () => [1, 2],
+        template: n => ({
+          type: 'job',
+          invoke: 'job1',
+          args: n
+        })
+      }
+    ]
+  })
+  await root.process()
+  a.deepEqual(actuals, [1, 2])
+})
+
 export default tom

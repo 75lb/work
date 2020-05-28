@@ -579,16 +579,14 @@ class Queue extends createMixin(Composite)(StateMachine) {
           if (job) {
             this.jobStats.active++;
             this.emit('job-start');
-            const jobResult = job.process();
-            const jobPromise = jobResult.then && jobResult.catch
-              ? jobResult
-              : Promise.resolve(jobResult);
-            jobPromise.then(result => {
-              this.jobStats.active -= 1;
-              this.jobStats.complete += 1;
-              this.emit('job-end');
-              return result
-            });
+            const jobPromise = job.process();
+            jobPromise
+              .then(result => {
+                this.jobStats.active -= 1;
+                this.jobStats.complete += 1;
+                this.emit('job-end');
+                return result
+              });
             toRun.push(jobPromise);
           }
         }
@@ -1022,7 +1020,7 @@ class Work extends Emitter$1 {
   constructor (options) {
     super();
     this.name = 'Work';
-    this.data = undefined;
+    this.ctx = undefined; // proxy, monitor read and writes via traps
     this.strategy = {};
     this.jobs = {};
   }
@@ -1043,7 +1041,6 @@ class Work extends Emitter$1 {
     if (node.template) {
       for (const item of node.repeatForEach()) {
         node.parentJobs.push(node.template(item));
-        // console.log(node.parentJobs)
       }
     } else if (node.jobs) {
       if (node.maxConcurrency === 1) {
@@ -1116,12 +1113,20 @@ class Job extends createMixin(Composite)(StateMachine) {
     this.fn = fn;
     this.name = options.name;
     this.args = arrayify(options.args);
-    this.onFailQueue = options.onFailQueue;
-    this.onSuccessQueue = options.onSuccessQueue;
+    this.onFail = options.onFail;
+    this.onSuccess = options.onSuccess;
   }
 
   async process () {
-    return this.fn(...this.args)
+    try {
+      return this.fn(...this.args)
+    } catch (err) {
+      if (this.onFail) {
+        return this.onFail.process()
+      } else {
+        throw err
+      }
+    }
   }
 }
 
@@ -1144,10 +1149,18 @@ class Planner {
       const node = new Job(plan.fn, plan);
       return node
     } else if (plan.type =  plan.queue) {
-      const queue = new Queue();
+      const queue = new Queue(plan);
       for (const item of plan.queue) {
-        const node = this.toModel(item);
-        queue.add(node);
+        if (item.type === 'template' && item.template) {
+          for (const i of item.repeatForEach()) {
+            // TODO: insert in place, rather than appending to end of queue
+            const node = this.toModel(item.template(i));
+            queue.add(node);
+          }
+        } else {
+          const node = this.toModel(item);
+          queue.add(node);
+        }
       }
       return queue
     }
