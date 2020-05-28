@@ -6,7 +6,7 @@ import sleep from 'sleep-anywhere'
 const a = assert.strict
 const tom = new TestRunner.Tom()
 
-tom.only('work strategy', async function () {
+tom.test('work strategy', async function () {
   const work = new Work()
   work.ctx = {
     data: {
@@ -100,7 +100,7 @@ tom.only('work strategy', async function () {
   await work.process()
 })
 
-tom.todo('test-runner style', async function () {
+tom.test('test-runner style', async function () {
   const work = new Work()
 
   work.stats = {
@@ -178,7 +178,9 @@ tom.todo('test-runner style', async function () {
 
   })
 
-  work.workload.add('logger', console.log)
+  work.addService({
+    logger: console.log
+  })
 
   class DefaultExceptionHandlingStrategy {
     catch (err, component, work) {
@@ -201,32 +203,32 @@ tom.todo('test-runner style', async function () {
     }
   }
 
-  work.exceptionHandlingStrategy = new KeepGoingStrategy({ state: 'pending' })
+  // work.exceptionHandlingStrategy = new KeepGoingStrategy({ state: 'pending' })
   await work.process()
 })
 
-tom.test('simple model, job root', async function () {
+tom.skip('simple model, job root', async function () {
   const actuals = []
   const root = new Job(() => {
     actuals.push(1)
   })
   const work = new Work()
-  await work.process2(root)
+  await work.process(root)
   a.deepEqual(actuals, [1])
 })
 
-tom.test('simple model, queue root', async function () {
+tom.skip('simple model, queue root', async function () {
   const actuals = []
   const root = new Queue()
   root.add(new Job(() => {
     actuals.push(1)
   }))
   const work = new Work()
-  await work.process2(root)
+  await work.process(root)
   a.deepEqual(actuals, [1])
 })
 
-tom.test('model from planner', async function () {
+tom.skip('model from planner', async function () {
   const actuals = []
   const planner = new Planner()
   const model = planner.toModel({
@@ -235,7 +237,7 @@ tom.test('model from planner', async function () {
     args: 1
   })
   const work = new Work()
-  await work.process2(model)
+  await work.process(model)
   a.deepEqual(actuals, [1])
 })
 

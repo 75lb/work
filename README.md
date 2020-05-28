@@ -1,7 +1,8 @@
-[![view on npm](http://img.shields.io/npm/v/work.svg)](https://www.npmjs.org/package/work)
-[![npm module downloads](http://img.shields.io/npm/dt/work.svg)](https://www.npmjs.org/package/work)
+[![view on npm](https://badgen.net/npm/v/work)](https://www.npmjs.org/package/work)
+[![npm module downloads](https://badgen.net/npm/dt/work)](https://www.npmjs.org/package/work)
+[![Gihub repo dependents](https://badgen.net/github/dependents-repo/75lb/work)](https://github.com/75lb/work/network/dependents?dependent_type=REPOSITORY)
+[![Gihub package dependents](https://badgen.net/github/dependents-pkg/75lb/work)](https://github.com/75lb/work/network/dependents?dependent_type=PACKAGE)
 [![Build Status](https://travis-ci.org/75lb/work.svg?branch=master)](https://travis-ci.org/75lb/work)
-[![Dependency Status](https://badgen.net/david/dep/75lb/work)](https://david-dm.org/75lb/work)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://github.com/feross/standard)
 
 # work

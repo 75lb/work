@@ -772,7 +772,10 @@
         const queue = new Queue(plan);
         for (const item of plan.queue) {
           if (item.type === 'template' && item.template) {
-            for (const i of item.repeatForEach()) {
+            const items = Array.isArray(item.repeatForEach)
+              ? item.repeatForEach
+              : item.repeatForEach();
+            for (const i of items) {
               // TODO: insert in place, rather than appending to end of queue
               const node = this.toModel(item.template(i));
               queue.add(node);
