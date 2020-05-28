@@ -6,7 +6,7 @@ import sleep from 'sleep-anywhere'
 const a = assert.strict
 const tom = new TestRunner.Tom()
 
-tom.todo('work strategy', async function () {
+tom.only('work strategy', async function () {
   const work = new Work()
   work.ctx = {
     data: {
@@ -27,7 +27,7 @@ tom.todo('work strategy', async function () {
         queue: [
           {
             name: 'collectUser',
-            type: 'invocation',
+            type: 'job',
             invoke: 'fetchFromCache',
             args: ['user'],
             onFail: {
@@ -40,8 +40,8 @@ tom.todo('work strategy', async function () {
             }
           },
           {
-            type: 'invocation',
-            actor: 'api',
+            type: 'job',
+            service: 'api',
             invoke: 'collectRepos'
           },
           {
@@ -50,13 +50,16 @@ tom.todo('work strategy', async function () {
               return ['one', 'two']
             },
             template: (item) => ({
-              type: 'invocation',
+              type: 'job',
               invoke: item
             })
           }
         ]
       },
-      { invoke: 'displayData' }
+      {
+        type: 'job',
+        invoke: 'displayData'
+      }
     ]
   }
 
@@ -67,10 +70,10 @@ tom.todo('work strategy', async function () {
   }
 
   /* Plan can invoke methods on any actor */
-  work.services.add('api', new Api())
+  work.addService(new Api(), 'api')
 
   /* default service */
-  work.services.add({
+  work.addService({
     fetchFromCache: async function (...args) {
       console.log('fetchFromCache', ...args)
       if (args[0] === 'repos') {
@@ -123,7 +126,7 @@ tom.todo('test-runner style', async function () {
           type: 'queue',
           queue: [
             {
-              type: 'invocation',
+              type: 'job',
               invoke: 'logger',
               args: 'before'
             }
@@ -133,7 +136,7 @@ tom.todo('test-runner style', async function () {
           type: 'queue',
           queue: [
             {
-              type: 'invocation',
+              type: 'job',
               invoke: 'logger',
               args: 'after'
             }
@@ -141,12 +144,12 @@ tom.todo('test-runner style', async function () {
         },
         queue: [
           {
-            type: 'invocation',
+            type: 'job',
             invoke: 'logger',
             args: 'one'
           },
           {
-            type: 'invocation',
+            type: 'job',
             invoke: 'logger',
             args: 'two'
           }
@@ -161,7 +164,7 @@ tom.todo('test-runner style', async function () {
             type: 'template',
             repeatForEach: [1, 2, 3],
             template: n => ({
-              type: 'invocation',
+              type: 'job',
               invoke: 'logger',
               args: [`template: ${n}`]
             })
