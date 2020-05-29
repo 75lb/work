@@ -9,7 +9,7 @@
     "node": ">=10"
   },
   "scripts": {
-    "test": "npm run dist && esm-runner test/*.mjs",
+    "test": "npm run dist && esm-runner test/*.mjs --view.hide-skips",
     "docs": "jsdoc2md -t jsdoc2md/README.hbs index.mjs > README.md; echo",
     "dist": "rollup -c",
     "watch": "rollup -cw"

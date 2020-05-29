@@ -20,12 +20,34 @@ tom.test('async function', async function () {
   a.deepEqual(actuals, [1])
 })
 
-tom.test('onFail', async function () {
+tom.test('sync job onFail: sync job', async function () {
   const actuals = []
   const job = new Job(() => {
     throw new Error('broken')
   })
   job.onFail = new Job(() => actuals.push(1))
+  await job.process()
+  a.deepEqual(actuals, [1])
+})
+
+tom.test('async job onFail: sync job', async function () {
+  const actuals = []
+  const job = new Job(async () => {
+    throw new Error('broken')
+  })
+  job.onFail = new Job(() => actuals.push(1))
+  await job.process()
+  a.deepEqual(actuals, [1])
+})
+
+tom.test('async job onFail: queue', async function () {
+  const actuals = []
+  const job = new Job(async () => {
+    throw new Error('broken')
+  })
+  const failQueue = new Queue()
+  failQueue.add(new Job(() => actuals.push(1)))
+  job.onFail = failQueue
   await job.process()
   a.deepEqual(actuals, [1])
 })

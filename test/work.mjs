@@ -7,6 +7,7 @@ const a = assert.strict
 const tom = new TestRunner.Tom()
 
 tom.test('work strategy', async function () {
+  const actuals = []
   const work = new Work()
   work.ctx = {
     data: {
@@ -19,6 +20,7 @@ tom.test('work strategy', async function () {
   work.plan = {
     name: 'buildPage',
     type: 'queue',
+    maxConcurrency: 1,
     queue: [
       {
         name: 'collectData',
@@ -33,9 +35,10 @@ tom.test('work strategy', async function () {
             onFail: {
               name: 'failQueue',
               type: 'queue',
+              maxConcurrency: 1,
               queue: [
-                { invoke: 'fetchUserFromRemote' },
-                { invoke: 'updateCache', args: ['user'] }
+                { type: 'job', invoke: 'fetchUserFromRemote' },
+                { type: 'job', invoke: 'updateCache', args: ['user'] }
               ]
             }
           },
@@ -65,7 +68,7 @@ tom.test('work strategy', async function () {
 
   class Api {
     collectRepos () {
-      console.log('collectRepos')
+      actuals.push('collectRepos')
     }
   }
 
@@ -75,29 +78,38 @@ tom.test('work strategy', async function () {
   /* default service */
   work.addService({
     fetchFromCache: async function (...args) {
-      console.log('fetchFromCache', ...args)
-      if (args[0] === 'repos') {
-        throw new Error('repos not found in cache')
-      }
+      actuals.push('fetchFromCache', ...args)
+      throw new Error('not found in cache')
     },
     fetchUserFromRemote: async function (...args) {
-      console.log('fetchUserFromRemote', ...args)
+      actuals.push('fetchUserFromRemote', ...args)
     },
     updateCache: async function (...args) {
-      console.log('updateCache', ...args)
+      actuals.push('updateCache', ...args)
     },
     displayData: function (...args) {
-      console.log('displayData', ...args)
+      actuals.push('displayData', ...args)
     },
     one: function () {
-      console.log('ONE')
+      actuals.push('ONE')
     },
     two: function () {
-      console.log('TWO')
+      actuals.push('TWO')
     }
   })
 
   await work.process()
+  a.deepEqual(actuals, [
+    'fetchFromCache',
+    'user',
+    'fetchUserFromRemote',
+    'updateCache',
+    'user',
+    'collectRepos',
+    'ONE',
+    'TWO',
+    'displayData'
+  ])
 })
 
 tom.test('test-runner style', async function () {

@@ -748,18 +748,26 @@
 
   class Planner {
     constructor () {
-      this.services = {};
+      this.services = { default: {} };
       this.root;
     }
 
     addService (service, name) {
-      this.services[name || 'default'] = service;
+      const existingService = this.services[name || 'default'];
+      if (existingService) {
+        Object.assign(existingService, service);
+      } else {
+        this.services[name || 'default'] = service;
+      }
     }
 
     toModel (plan) {
       if (plan.type === 'job' && plan.invoke) {
         const fn = this.services[plan.service || 'default'][plan.invoke];
         if (fn) {
+          if (plan.onFail) {
+            plan.onFail = this.toModel(plan.onFail);
+          }
           const node = new Job(fn, plan);
           return node
         } else {
@@ -834,7 +842,8 @@
 
     async process () {
       try {
-        return this.fn(...this.args)
+        const result = await this.fn(...this.args);
+        return result
       } catch (err) {
         if (this.onFail) {
           return this.onFail.process()
