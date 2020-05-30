@@ -73,7 +73,7 @@ tom.test('work strategy', async function () {
   }
 
   /* Plan can invoke methods on any actor */
-  work.addService(new Api(), 'api')
+  work.addService('api', new Api())
 
   /* default service */
   work.addService({

@@ -524,7 +524,7 @@ class Queue extends createMixin(Composite)(StateMachine) {
     super();
     options = Object.assign({
       jobs: [],
-      maxConcurrency: 10
+      maxConcurrency: 1
     }, options);
     this.jobStats = {
       total: 0,
@@ -731,12 +731,15 @@ class Planner {
     this.services = { default: {} };
   }
 
-  addService (service, name) {
-    const existingService = this.services[name || 'default'];
+  addService (...args) {
+    const [name, service] = args.length === 1
+      ? ['default', args[0]]
+      : args;
+    const existingService = this.services[name];
     if (existingService) {
       Object.assign(existingService, service);
     } else {
-      this.services[name || 'default'] = service;
+      this.services[name] = service;
     }
   }
 
@@ -787,9 +790,6 @@ class Planner {
 class Work extends Emitter$1 {
   /**
    * @param {object} options
-   * @param {number} options.maxConcurrency - Defaults to 1.
-   * @emits job-start
-   * @emits job-end
    */
   constructor (options) {
     super();
@@ -799,8 +799,8 @@ class Work extends Emitter$1 {
     this.planner = new Planner();
   }
 
-  addService (service, name) {
-    this.planner.addService(service, name);
+  addService (...args) {
+    this.planner.addService(...args);
   }
 
   async process () {
