@@ -140,4 +140,8 @@ tom.todo('onFail', async function () {
   console.log(actuals)
 })
 
+tom.todo('break', async function () {
+  /* queued item can set `.break` to cancel further processing of queue */
+})
+
 export default tom

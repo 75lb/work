@@ -112,7 +112,8 @@ tom.test('work strategy', async function () {
   ])
 })
 
-tom.test('test-runner style', async function () {
+tom.test('test-runner style: exception handling', async function () {
+  const actuals = []
   const work = new Work()
 
   work.stats = {
@@ -131,29 +132,20 @@ tom.test('test-runner style', async function () {
     maxConcurrency: 1,
     queue: [
       {
+        name: 'file1-before',
+        type: 'queue',
+        queue: [
+          {
+            type: 'job',
+            invoke: 'logger',
+            args: 'before'
+          }
+        ]
+      },
+      {
         name: 'file1',
         type: 'queue',
-        maxConcurrency: 10,
-        beforeQueue: {
-          type: 'queue',
-          queue: [
-            {
-              type: 'job',
-              invoke: 'logger',
-              args: 'before'
-            }
-          ]
-        },
-        afterQueue: {
-          type: 'queue',
-          queue: [
-            {
-              type: 'job',
-              invoke: 'logger',
-              args: 'after'
-            }
-          ]
-        },
+        maxConcurrency: 1,
         queue: [
           {
             type: 'job',
@@ -161,9 +153,24 @@ tom.test('test-runner style', async function () {
             args: 'one'
           },
           {
+            name: 'failing-test',
+            type: 'job',
+            fn: () => { throw new Error('failed') },
+            onFail: {
+              type: 'job',
+              invoke: 'failLogger'
+            }
+          }
+        ]
+      },
+      {
+        name: 'file1-after',
+        type: 'queue',
+        queue: [
+          {
             type: 'job',
             invoke: 'logger',
-            args: 'two'
+            args: 'after'
           }
         ]
       },
@@ -186,37 +193,52 @@ tom.test('test-runner style', async function () {
     ]
   }
 
-  work.on('fail', async function () {
-
+  work.on('fail', async function (err, job) {
+    actuals.push(err.message)
   })
 
   work.addService({
-    logger: console.log
+    logger: arg => actuals.push(arg),
+    failLogger: (err, job) => actuals.push(err.message, job.name)
   })
 
-  class DefaultExceptionHandlingStrategy {
-    catch (err, component, work) {
-      work.emit('fail', err, component)
-      throw err
-    }
-  }
+  // class DefaultExceptionHandlingStrategy {
+  //   catch (err, job) {
+  //     work.emit('fail', err, job)
+  //     throw err
+  //   }
+  // }
 
-  class KeepGoingStrategy {
-    constructor (runner) {
-      this.runner = runner
-    }
+  // class KeepGoingStrategy {
+  //   constructor (runner) {
+  //     this.runner = runner
+  //   }
 
-    catch (err, component, work) {
-      this.state = 'fail'
-      if (this.options.debug) {
-        console.error('DEBUG')
-        console.error(err)
-      }
-    }
-  }
+  //   catch (err, job) {
+  //     this.state = 'fail'
+  //     if (this.options.debug) {
+  //       console.error('DEBUG')
+  //       console.error(err)
+  //     }
+  //   }
+  // }
 
   // work.exceptionHandlingStrategy = new KeepGoingStrategy({ state: 'pending' })
   await work.process()
+  // for (const node of work) {
+    // console.log('node', await node.constructor.name)
+  // }
+
+  a.deepEqual(actuals, [
+   'before',
+   'one',
+   'failed',
+   'failing-test',
+   'after',
+   'template: 1',
+   'template: 2',
+   'template: 3'
+  ])
 })
 
 tom.skip('simple model, job root', async function () {

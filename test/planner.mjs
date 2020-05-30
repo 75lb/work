@@ -6,7 +6,7 @@ import sleep from 'sleep-anywhere/index.mjs'
 const a = assert.strict
 const tom = new TestRunner.Tom()
 
-tom.test('toModel(job)', async function () {
+tom.test('toModel(job): invoke', async function () {
   const planner = new Planner()
   planner.addService({
     job1: n => { actuals.push(n) },
@@ -22,6 +22,42 @@ tom.test('toModel(job)', async function () {
     }
   })
   a.equal(result.fn, planner.services.default.job1)
+  a.equal(result.onFail.fn, planner.services.default.job2)
+})
+
+tom.test('toModel(job): fn', async function () {
+  const planner = new Planner()
+  const job1 = n => { actuals.push(n) }
+  const job2 = n => { actuals.push(n) }
+  const result = planner.toModel({
+    type: 'job',
+    fn: job1,
+    args: 1,
+    onFail: {
+      type: 'job',
+      fn: job2
+    }
+  })
+  a.equal(result.fn, job1)
+  a.equal(result.onFail.fn, job2)
+})
+
+tom.test('toModel(job): fn, invoke', async function () {
+  const planner = new Planner()
+  const job1 = n => { actuals.push(n) }
+  planner.addService({
+    job2: n => { actuals.push(n) },
+  })
+  const result = planner.toModel({
+    type: 'job',
+    fn: job1,
+    args: 1,
+    onFail: {
+      type: 'job',
+      invoke: 'job2'
+    }
+  })
+  a.equal(result.fn, job1)
   a.equal(result.onFail.fn, planner.services.default.job2)
 })
 

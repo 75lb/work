@@ -530,8 +530,7 @@
       super();
       options = Object.assign({
         jobs: [],
-        maxConcurrency: 10,
-        skipAfter: false
+        maxConcurrency: 10
       }, options);
       this.jobStats = {
         total: 0,
@@ -539,18 +538,8 @@
         active: 0
       };
       this.maxConcurrency = options.maxConcurrency;
-      /**
-       * Store arbitrary data here.
-       */
-      this.data = null;
-      this.result = null;
       for (const job of options.jobs) {
         this.add(job);
-      }
-
-      // TODO .addAfter method which incrememts jobStats.total
-      if (!options.skipAfter) {
-        this.after = new Queue({ maxConcurrency: options.maxConcurrency, skipAfter: true });
       }
     }
 
@@ -585,9 +574,9 @@
             if (job) {
               this.jobStats.active++;
               this.emit('job-start');
-              const jobPromise = job.process();
-              jobPromise
+              const jobPromise = job.process()
                 .then(result => {
+                  job.result = result;
                   this.jobStats.active -= 1;
                   this.jobStats.complete += 1;
                   this.emit('job-end');
@@ -596,14 +585,11 @@
               toRun.push(jobPromise);
             }
           }
-          const results = await Promise.all(toRun);
-          for (const result of results) {
-            yield result;
+          const completedJobs = await Promise.all(toRun);
+          for (const job of completedJobs) {
+            yield job;
           }
         }
-      }
-      if (this.after) {
-        yield * this.after;
       }
       this.emit('end');
     }
@@ -749,7 +735,6 @@
   class Planner {
     constructor () {
       this.services = { default: {} };
-      this.root;
     }
 
     addService (service, name) {
@@ -774,6 +759,9 @@
           throw new Error('Could not find function: ' + plan.invoke)
         }
       } else if (plan.type === 'job' && plan.fn) {
+        if (plan.onFail) {
+          plan.onFail = this.toModel(plan.onFail);
+        }
         const node = new Job(plan.fn, plan);
         return node
       } else if (plan.type =  plan.queue) {
@@ -825,6 +813,22 @@
       const root = this.planner.toModel(this.plan);
       return root.process()
     }
+
+    /**
+     * Sync iterator yields plan nodes
+     */
+    * [Symbol.iterator] () {
+      const root = this.planner.toModel(this.plan);
+      yield * root;
+    }
+
+    /**
+     * Async iterator executes plan yielding results
+     */
+    async * [Symbol.asyncIterator] () {
+      const root = this.planner.toModel(this.plan);
+      yield * root;
+    }
   }
 
   class Job extends createMixin(Composite)(StateMachine) {
@@ -837,7 +841,7 @@
       this.name = options.name;
       this.args = arrayify(options.args);
       this.onFail = options.onFail;
-      this.onSuccess = options.onSuccess;
+      this.result;
     }
 
     async process () {
@@ -846,6 +850,9 @@
         return result
       } catch (err) {
         if (this.onFail) {
+          if (!(this.onFail.args && this.onFail.args.length)) {
+            this.onFail.args = [err, this];
+          }
           return this.onFail.process()
         } else {
           throw err
