@@ -144,4 +144,8 @@ tom.todo('break', async function () {
   /* queued item can set `.break` to cancel further processing of queue */
 })
 
+tom.todo('condition', async function () {
+  /* only process queue if `.condition` is truthy, e.g. `condition: user.npm` */
+})
+
 export default tom
