@@ -32,7 +32,8 @@
   },
   "files": [
     "*.mjs",
-    "dist"
+    "dist",
+    "lib"
   ],
   "standard": {
     "ignore": [
