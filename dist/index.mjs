@@ -615,7 +615,8 @@ class Planner {
         if (plan.onFail) {
           plan.onFail = this.toModel(plan.onFail);
         }
-        const node = new Job(fn, plan);
+        plan.fn = fn;
+        const node = new Job(plan);
         return node
       } else {
         throw new Error('Could not find function: ' + plan.invoke)
@@ -624,7 +625,7 @@ class Planner {
       if (plan.onFail) {
         plan.onFail = this.toModel(plan.onFail);
       }
-      const node = new Job(plan.fn, plan);
+      const node = new Job(plan);
       return node
     } else if (plan.type =  plan.queue) {
       const queue = new Queue(plan);
@@ -691,20 +692,19 @@ class Work extends Emitter {
 }
 
 class Job extends createMixin(Composite)(StateMachine) {
-  constructor (fn, options = {}) {
+  constructor (options = {}) {
     super('pending', [
       { from: 'pending', to: 'in-progress' },
       { from: 'in-progress', to: 'failed' },
       { from: 'in-progress', to: 'successful' },
       { from: 'failed', to: 'complete' },
       { from: 'successful', to: 'complete' },
+      { from: 'pending', to: 'cancelled' },
+      { from: 'in-progress', to: 'cancelled' },
     ]);
-    if (!fn) {
-      throw new Error('Job function required')
-    }
-    this.fn = fn;
+    this.fn = options.fn;
     this.name = options.name;
-    this.args = arrayify(options.args);
+    this.args = options.args;
     this.onFail = options.onFail;
     this.result;
   }
@@ -712,7 +712,7 @@ class Job extends createMixin(Composite)(StateMachine) {
   async process () {
     try {
       this.state = 'in-progress';
-      const result = await this.fn(...this.args);
+      const result = await this.fn(...arrayify(this.args));
       this.state = 'successful';
       return result
     } catch (err) {

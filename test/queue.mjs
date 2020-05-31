@@ -7,8 +7,10 @@ const a = assert.strict
 const tom = new TestRunner.Tom()
 
 function createJob (ms, result) {
-  return new Job(async function () {
-    return sleep(ms, result)
+  return new Job({
+    fn: async function () {
+      return sleep(ms, result)
+    }
   })
 }
 
@@ -74,17 +76,23 @@ tom.test('.process(): maxConcurrency 3, job finish order correct', async functio
   const queue = new Queue({
     maxConcurrency: 3
   })
-  queue.add(new Job(async () => {
-    await sleep(50)
-    actuals.push(1)
+  queue.add(new Job({
+    fn: async () => {
+      await sleep(50)
+      actuals.push(1)
+    }
   }))
-  queue.add(new Job(async () => {
-    await sleep(20)
-    actuals.push(1.1)
+  queue.add(new Job({
+    fn: async () => {
+      await sleep(20)
+      actuals.push(1.1)
+    }
   }))
-  queue.add(new Job(async () => {
-    await sleep(100)
-    actuals.push(1.2)
+  queue.add(new Job({
+    fn: async () => {
+      await sleep(100)
+      actuals.push(1.2)
+    }
   }))
   const results = await queue.process()
   a.deepEqual(actuals, [1.1, 1, 1.2])
@@ -124,8 +132,8 @@ tom.test('iterator: maxConcurrency 3, results still in job order', async functio
 
 tom.test('sync jobs', async function () {
   const queue = new Queue()
-  queue.add(new Job(function () { return 1 }))
-  queue.add(new Job(function () { return 2 }))
+  queue.add(new Job({ fn: function () { return 1 } }))
+  queue.add(new Job({ fn: function () { return 2 } }))
   const result = await queue.process()
   a.deepEqual(result, [1, 2])
 })
@@ -136,7 +144,7 @@ tom.todo('onFail', async function () {
   queue.add(new Job(() => {
     throw new Error('broken')
   }))
-  queue.onFail = new Job(() => { actuals.push(1) })
+  queue.onFail = new Job({ fn: () => { actuals.push(1) } })
   await queue.process()
   console.log(actuals)
 })
