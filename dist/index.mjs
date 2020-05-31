@@ -528,16 +528,17 @@ class Queue extends createMixin(Composite)(StateMachine) {
     ]);
     options = Object.assign({
       jobs: [],
-      maxConcurrency: 1,
-      name: 'queue'
+      maxConcurrency: 1
     }, options);
     this.jobStats = {
       total: 0,
       complete: 0,
       active: 0
     };
+    this.id = (Math.random() * 10e18).toString(16);
     this.maxConcurrency = options.maxConcurrency;
     this.name = options.name;
+    this.type = 'queue';
     for (const job of options.jobs) {
       this.add(job);
     }
@@ -557,6 +558,7 @@ class Queue extends createMixin(Composite)(StateMachine) {
   add (job) {
     super.add(job);
     this.jobStats.total++;
+    this.emit('add', job);
   }
 
   /**
@@ -590,7 +592,6 @@ class Queue extends createMixin(Composite)(StateMachine) {
       }
     }
     this.state = 'successful';
-    this.state = 'complete';
   }
 
   async process () {
@@ -599,6 +600,18 @@ class Queue extends createMixin(Composite)(StateMachine) {
       output.push(result);
     }
     return output
+  }
+
+  toString () {
+    return `${this.name || 'queue'}: ${this.state}`
+  }
+
+  tree () {
+    return Array.from(this).reduce((prev, curr) => {
+      const indent = '  '.repeat(curr.level());
+      const line = `${indent}- ${curr}\n`;
+      return (prev += line)
+    }, '')
   }
 }
 
@@ -680,25 +693,12 @@ class Work extends Emitter {
     this.planner.addService(...args);
   }
 
+  setPlan (plan) {
+    this.model = this.planner.toModel(plan);
+  }
+
   async process () {
-    const root = this.planner.toModel(this.plan);
-    return root.process()
-  }
-
-  /**
-   * Sync iterator yields plan nodes
-   */
-  * [Symbol.iterator] () {
-    const root = this.planner.toModel(this.plan);
-    yield * root;
-  }
-
-  /**
-   * Async iterator executes plan yielding results
-   */
-  async * [Symbol.asyncIterator] () {
-    const root = this.planner.toModel(this.plan);
-    yield * root;
+    return this.model.process()
   }
 }
 
@@ -719,6 +719,8 @@ class Job extends createMixin(Composite)(StateMachine) {
     if (options.onFail) {
       this.onFail = options.onFail;
     }
+    this.id = (Math.random() * 10e18).toString(16);
+    this.type = 'job';
     this.name = options.name;
     this.args = options.args;
     this.result;
@@ -736,13 +738,31 @@ class Job extends createMixin(Composite)(StateMachine) {
         if (!(this.onFail.args && this.onFail.args.length)) {
           this.onFail.args = [err, this];
         }
+        this.add(this.onFail);
         return this.onFail.process()
       } else {
         throw err
       }
     } finally {
-      this.setState('complete', this);
+      // this.setState('complete', this)
     }
+  }
+
+  add (node) {
+    super.add(node);
+    this.emit('add', node);
+  }
+
+  toString () {
+    return `${this.name || this.invoke || this.fn.name}: ${this.state}`
+  }
+
+  tree () {
+    return Array.from(this).reduce((prev, curr) => {
+      const indent = '  '.repeat(curr.level());
+      const line = `${indent}- ${curr}\n`;
+      return (prev += line)
+    }, '')
   }
 }
 
