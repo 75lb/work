@@ -42,6 +42,7 @@ tom.test('.process(): events', async function () {
   })
 
   await queue.process()
+  this.data = actuals
   a.deepEqual(actuals, [
     ['start', { total: 3, complete: 0, active: 0 }],
     ['job-start', { total: 3, complete: 0, active: 1 }],

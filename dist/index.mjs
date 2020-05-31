@@ -1,22 +1,28 @@
 /**
  * @module obso
  */
+const _listeners = new WeakMap();
 
 /**
  * @alias module:obso
  */
 class Emitter {
+  constructor () {
+    _listeners.set(this, []);
+  }
+
   /**
    * Emit an event.
    * @param {string} eventName - the event name to emit.
    * @param ...args {*} - args to pass to the event handler
    */
   emit (eventName, ...args) {
-    if (this._listeners && this._listeners.length > 0) {
+    const listeners = _listeners.get(this);
+    if (listeners && listeners.length > 0) {
       const toRemove = [];
 
       /* invoke each relevant listener */
-      for (const listener of this._listeners) {
+      for (const listener of listeners) {
         const handlerArgs = args.slice();
         if (listener.eventName === '__ALL__') {
           handlerArgs.unshift(eventName);
@@ -31,7 +37,7 @@ class Emitter {
       }
 
       toRemove.forEach(listener => {
-        this._listeners.splice(this._listeners.indexOf(listener), 1);
+        listeners.splice(listeners.indexOf(listener), 1);
       });
     }
 
@@ -40,11 +46,12 @@ class Emitter {
   }
 
   _emitTarget (eventName, target, ...args) {
-    if (this._listeners && this._listeners.length > 0) {
+    const listeners = _listeners.get(this);
+    if (listeners && listeners.length > 0) {
       const toRemove = [];
 
       /* invoke each relevant listener */
-      for (const listener of this._listeners) {
+      for (const listener of listeners) {
         const handlerArgs = args.slice();
         if (listener.eventName === '__ALL__') {
           handlerArgs.unshift(eventName);
@@ -59,7 +66,7 @@ class Emitter {
       }
 
       toRemove.forEach(listener => {
-        this._listeners.splice(this._listeners.indexOf(listener), 1);
+        listeners.splice(listeners.indexOf(listener), 1);
       });
     }
 
@@ -75,7 +82,7 @@ class Emitter {
     * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
     */
   on (eventName, handler, options) {
-    createListenersArray(this);
+    const listeners = _listeners.get(this);
     options = options || {};
     if (arguments.length === 1 && typeof eventName === 'function') {
       handler = eventName;
@@ -86,7 +93,7 @@ class Emitter {
     } else if (handler && typeof handler !== 'function') {
       throw new Error('handler arg must be a function')
     } else {
-      this._listeners.push({ eventName, handler: handler, once: options.once });
+      listeners.push({ eventName, handler: handler, once: options.once });
     }
   }
 
@@ -96,11 +103,12 @@ class Emitter {
    * @param handler {function} - the event handler
    */
   removeEventListener (eventName, handler) {
-    if (!this._listeners || this._listeners.length === 0) return
-    const index = this._listeners.findIndex(function (listener) {
+    const listeners = _listeners.get(this);
+    if (!listeners || listeners.length === 0) return
+    const index = listeners.findIndex(function (listener) {
       return listener.eventName === eventName && listener.handler === handler
     });
-    if (index > -1) this._listeners.splice(index, 1);
+    if (index > -1) listeners.splice(index, 1);
   }
 
   /**
@@ -112,31 +120,12 @@ class Emitter {
     /* TODO: the once option is browser-only */
     this.on(eventName, handler, { once: true });
   }
-
-  /**
-   * Propagate events from the supplied emitter to this emitter.
-   * @param {string} eventName - the event name to propagate
-   * @param {object} from - the emitter to propagate from
-   */
-  propagate (eventName, from) {
-    from.on(eventName, (...args) => this.emit(eventName, ...args));
-  }
 }
 
 /**
  * Alias for `on`.
  */
 Emitter.prototype.addEventListener = Emitter.prototype.on;
-
-function createListenersArray (target) {
-  if (target._listeners) return
-  Object.defineProperty(target, '_listeners', {
-    enumerable: false,
-    configurable: false,
-    writable: false,
-    value: []
-  });
-}
 
 /**
  * Takes any input and guarantees an array back.
@@ -237,6 +226,10 @@ const _validMoves = new WeakMap();
  * @extends {Emitter}
  */
 class StateMachine extends Emitter {
+  /**
+   * @param {string} - Initial state, e.g. 'pending'.
+   * @param {object[]} - Array of valid move rules.
+   */
   constructor (initialState, validMoves) {
     super();
     _validMoves.set(this, arrayify(validMoves).map(move => {
@@ -293,7 +286,6 @@ class StateMachine extends Emitter {
 
         /**
          * fired on every state change
-         * @event module:fsm-base#&lt;state value&gt;
          */
         this.emit(state, ...args);
       }
@@ -310,6 +302,10 @@ class StateMachine extends Emitter {
     }
   }
 
+  /**
+   * Reset to initial state.
+   * @emits "reset"
+   */
   resetState () {
     const prevState = this.state;
     const initialState = _initialState.get(this);
@@ -567,13 +563,11 @@ class Queue extends createMixin(Composite)(StateMachine) {
           const job = jobs.shift();
           if (job) {
             this.jobStats.active++;
-            this.emit('job-start');
             const jobPromise = job.process()
               .then(result => {
                 job.result = result;
                 this.jobStats.active -= 1;
                 this.jobStats.complete += 1;
-                this.emit('job-end');
                 return result
               });
             toRun.push(jobPromise);
@@ -596,135 +590,6 @@ class Queue extends createMixin(Composite)(StateMachine) {
     return output
   }
 }
-
-/**
- * @module obso
- */
-const _listeners = new WeakMap();
-
-/**
- * @alias module:obso
- */
-class Emitter$1 {
-  constructor () {
-    _listeners.set(this, []);
-  }
-
-  /**
-   * Emit an event.
-   * @param {string} eventName - the event name to emit.
-   * @param ...args {*} - args to pass to the event handler
-   */
-  emit (eventName, ...args) {
-    const listeners = _listeners.get(this);
-    if (listeners && listeners.length > 0) {
-      const toRemove = [];
-
-      /* invoke each relevant listener */
-      for (const listener of listeners) {
-        const handlerArgs = args.slice();
-        if (listener.eventName === '__ALL__') {
-          handlerArgs.unshift(eventName);
-        }
-
-        if (listener.eventName === '__ALL__' || listener.eventName === eventName) {
-          listener.handler.call(this, ...handlerArgs);
-
-          /* remove once handler */
-          if (listener.once) toRemove.push(listener);
-        }
-      }
-
-      toRemove.forEach(listener => {
-        listeners.splice(listeners.indexOf(listener), 1);
-      });
-    }
-
-    /* bubble event up */
-    if (this.parent) this.parent._emitTarget(eventName, this, ...args);
-  }
-
-  _emitTarget (eventName, target, ...args) {
-    const listeners = _listeners.get(this);
-    if (listeners && listeners.length > 0) {
-      const toRemove = [];
-
-      /* invoke each relevant listener */
-      for (const listener of listeners) {
-        const handlerArgs = args.slice();
-        if (listener.eventName === '__ALL__') {
-          handlerArgs.unshift(eventName);
-        }
-
-        if (listener.eventName === '__ALL__' || listener.eventName === eventName) {
-          listener.handler.call(target, ...handlerArgs);
-
-          /* remove once handler */
-          if (listener.once) toRemove.push(listener);
-        }
-      }
-
-      toRemove.forEach(listener => {
-        listeners.splice(listeners.indexOf(listener), 1);
-      });
-    }
-
-    /* bubble event up */
-    if (this.parent) this.parent._emitTarget(eventName, target || this, ...args);
-  }
-
-   /**
-    * Register an event listener.
-    * @param {string} [eventName] - The event name to watch. Omitting the name will catch all events.
-    * @param {function} handler - The function to be called when `eventName` is emitted. Invocated with `this` set to `emitter`.
-    * @param {object} [options]
-    * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
-    */
-  on (eventName, handler, options) {
-    const listeners = _listeners.get(this);
-    options = options || {};
-    if (arguments.length === 1 && typeof eventName === 'function') {
-      handler = eventName;
-      eventName = '__ALL__';
-    }
-    if (!handler) {
-      throw new Error('handler function required')
-    } else if (handler && typeof handler !== 'function') {
-      throw new Error('handler arg must be a function')
-    } else {
-      listeners.push({ eventName, handler: handler, once: options.once });
-    }
-  }
-
-  /**
-   * Remove an event listener.
-   * @param eventName {string} - the event name
-   * @param handler {function} - the event handler
-   */
-  removeEventListener (eventName, handler) {
-    const listeners = _listeners.get(this);
-    if (!listeners || listeners.length === 0) return
-    const index = listeners.findIndex(function (listener) {
-      return listener.eventName === eventName && listener.handler === handler
-    });
-    if (index > -1) listeners.splice(index, 1);
-  }
-
-  /**
-   * Once.
-   * @param {string} eventName - the event name to watch
-   * @param {function} handler - the event handler
-   */
-  once (eventName, handler) {
-    /* TODO: the once option is browser-only */
-    this.on(eventName, handler, { once: true });
-  }
-}
-
-/**
- * Alias for `on`.
- */
-Emitter$1.prototype.addEventListener = Emitter$1.prototype.on;
 
 class Planner {
   constructor () {
@@ -787,7 +652,7 @@ class Planner {
   }
 }
 
-class Work extends Emitter$1 {
+class Work extends Emitter {
   /**
    * @param {object} options
    */
@@ -827,7 +692,13 @@ class Work extends Emitter$1 {
 
 class Job extends createMixin(Composite)(StateMachine) {
   constructor (fn, options = {}) {
-    super();
+    super('pending', [
+      { from: 'pending', to: 'in-progress' },
+      { from: 'in-progress', to: 'failed' },
+      { from: 'in-progress', to: 'successful' },
+      { from: 'failed', to: 'complete' },
+      { from: 'successful', to: 'complete' },
+    ]);
     if (!fn) {
       throw new Error('Job function required')
     }
@@ -840,9 +711,12 @@ class Job extends createMixin(Composite)(StateMachine) {
 
   async process () {
     try {
+      this.state = 'in-progress';
       const result = await this.fn(...this.args);
+      this.state = 'successful';
       return result
     } catch (err) {
+      this.state = 'failed';
       if (this.onFail) {
         if (!(this.onFail.args && this.onFail.args.length)) {
           this.onFail.args = [err, this];
@@ -851,6 +725,8 @@ class Job extends createMixin(Composite)(StateMachine) {
       } else {
         throw err
       }
+    } finally {
+      this.state = 'complete';
     }
   }
 }

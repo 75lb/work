@@ -5,6 +5,8 @@
   "description": "Isomorphic, async iterable command queue",
   "repository": "https://github.com/75lb/work",
   "license": "MIT",
+  "main": "dist/index.js",
+  "module": "index.mjs",
   "engines": {
     "node": ">=10"
   },
@@ -18,7 +20,7 @@
     "array-back": "^4.0.1",
     "composite-class": "^2.0.1",
     "create-mixin": "^3.0.0",
-    "fsm-base": "^0.5.2",
+    "fsm-base": "^0.6.0",
     "obso": "^0.6.0",
     "typical": "^6.0.1"
   },

@@ -79,4 +79,13 @@ tom.skip('.process(args)', async function () {
   a.deepEqual(actuals, [1, 2, 3])
 })
 
+tom.test('events', async function () {
+  const actuals = []
+  const job = new Job((...args) => { actuals.push(...args) })
+  job.args = [1]
+  job.on('state', (state) => actuals.push(state))
+  await job.process()
+  a.deepEqual(actuals, [ 'in-progress', 1, 'successful', 'complete' ])
+})
+
 export default tom
