@@ -21,8 +21,8 @@ tom.test('toModel(job): invoke', async function () {
       invoke: 'job2'
     }
   })
-  a.equal(result.fn, planner.services.default.job1)
-  a.equal(result.onFail.fn, planner.services.default.job2)
+  a.equal(result.fn.name, 'bound job1')
+  a.equal(result.onFail.fn.name, 'bound job2')
 })
 
 tom.test('toModel(job): fn', async function () {
@@ -58,7 +58,7 @@ tom.test('toModel(job): fn, invoke', async function () {
     }
   })
   a.equal(result.fn, job1)
-  a.equal(result.onFail.fn, planner.services.default.job2)
+  a.equal(result.onFail.fn.name, 'bound job2')
 })
 
 tom.test('single job invocation', async function () {

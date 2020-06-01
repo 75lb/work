@@ -17,7 +17,39 @@ tom.test('work strategy', async function () {
     }
   }
 
-  work.plan = {
+  class Api {
+    collectRepos () {
+      actuals.push('collectRepos')
+    }
+  }
+
+  /* Plan can invoke methods on any actor */
+  work.addService('api', new Api())
+
+  /* default service */
+  work.addService({
+    fetchFromCache: async function (...args) {
+      actuals.push('fetchFromCache', ...args)
+      throw new Error('not found in cache')
+    },
+    fetchUserFromRemote: async function (...args) {
+      actuals.push('fetchUserFromRemote', ...args)
+    },
+    updateCache: async function (...args) {
+      actuals.push('updateCache', ...args)
+    },
+    displayData: function (...args) {
+      actuals.push('displayData', ...args)
+    },
+    one: function () {
+      actuals.push('ONE')
+    },
+    two: function () {
+      actuals.push('TWO')
+    }
+  })
+
+  work.setPlan({
     name: 'buildPage',
     type: 'queue',
     maxConcurrency: 1,
@@ -64,38 +96,6 @@ tom.test('work strategy', async function () {
         invoke: 'displayData'
       }
     ]
-  }
-
-  class Api {
-    collectRepos () {
-      actuals.push('collectRepos')
-    }
-  }
-
-  /* Plan can invoke methods on any actor */
-  work.addService('api', new Api())
-
-  /* default service */
-  work.addService({
-    fetchFromCache: async function (...args) {
-      actuals.push('fetchFromCache', ...args)
-      throw new Error('not found in cache')
-    },
-    fetchUserFromRemote: async function (...args) {
-      actuals.push('fetchUserFromRemote', ...args)
-    },
-    updateCache: async function (...args) {
-      actuals.push('updateCache', ...args)
-    },
-    displayData: function (...args) {
-      actuals.push('displayData', ...args)
-    },
-    one: function () {
-      actuals.push('ONE')
-    },
-    two: function () {
-      actuals.push('TWO')
-    }
   })
 
   await work.process()
@@ -126,7 +126,12 @@ tom.test('test-runner style: exception handling', async function () {
     fail: 1
   }
 
-  work.plan = {
+  work.addService({
+    logger: arg => actuals.push(arg),
+    failLogger: (err, job) => actuals.push(err.message, job.name)
+  })
+
+  work.setPlan({
     name: 'testSuite',
     type: 'queue',
     maxConcurrency: 1,
@@ -191,15 +196,10 @@ tom.test('test-runner style: exception handling', async function () {
         ]
       }
     ]
-  }
+  })
 
   work.on('fail', async function (err, job) {
     actuals.push(err.message)
-  })
-
-  work.addService({
-    logger: arg => actuals.push(arg),
-    failLogger: (err, job) => actuals.push(err.message, job.name)
   })
 
   // class DefaultExceptionHandlingStrategy {

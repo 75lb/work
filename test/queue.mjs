@@ -67,12 +67,6 @@ tom.test('.process(): events', async function () {
        { total: 3, complete: 0, active: 1 }
      ],
      [
-       'job1',
-       'complete',
-       'successful',
-       { total: 3, complete: 0, active: 1 }
-     ],
-     [
        'job2',
        'in-progress',
        'pending',
@@ -82,12 +76,6 @@ tom.test('.process(): events', async function () {
        'job2',
        'successful',
        'in-progress',
-       { total: 3, complete: 1, active: 1 }
-     ],
-     [
-       'job2',
-       'complete',
-       'successful',
        { total: 3, complete: 1, active: 1 }
      ],
      [
@@ -103,21 +91,9 @@ tom.test('.process(): events', async function () {
        { total: 3, complete: 2, active: 1 }
      ],
      [
-       'job3',
-       'complete',
-       'successful',
-       { total: 3, complete: 2, active: 1 }
-     ],
-     [
        'queue1',
        'successful',
        'in-progress',
-       { total: 3, complete: 3, active: 0 }
-     ],
-     [
-       'queue1',
-       'complete',
-       'successful',
        { total: 3, complete: 3, active: 0 }
      ]
    ])

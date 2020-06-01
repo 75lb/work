@@ -583,7 +583,7 @@
               this.jobStats.active++;
               const jobPromise = job.process()
                 .then(result => {
-                  job.result = result;
+                  // job.result = result
                   this.jobStats.active -= 1;
                   this.jobStats.complete += 1;
                   return result
@@ -640,14 +640,14 @@
 
     toModel (plan) {
       if (plan.type === 'job' && plan.invoke) {
-        const fn = this.services[plan.service || 'default'][plan.invoke];
+        const service = this.services[plan.service || 'default'];
+        const fn = service[plan.invoke];
         if (fn) {
           if (plan.onFail) {
             plan.onFail = this.toModel(plan.onFail);
           }
-          plan.fn = fn;
-          const node = new Job(plan);
-          return node
+          plan.fn = fn.bind(service);
+          return new Job(plan)
         } else {
           throw new Error('Could not find function: ' + plan.invoke)
         }
@@ -729,7 +729,7 @@
       this.type = 'job';
       this.name = options.name;
       this.args = options.args;
-      this.result;
+      // this.result
     }
 
     async process () {
