@@ -275,6 +275,22 @@ tom.skip('model from planner', async function () {
   a.deepEqual(actuals, [1])
 })
 
+tom.test('createContext()', async function () {
+  const actuals = []
+  const work = new Work()
+  work.on('ctx-read', (prop, val) => {
+    actuals.push(`ctx-read: ${prop}, ${val}`)
+  })
+  work.on('ctx-write', (prop, val) => {
+    actuals.push(`ctx-write: ${prop}, ${val}`)
+  })
+  const ctx = work.createContext()
+  ctx.something = 1
+  actuals.push('read: ' + ctx.something)
+  // this.data = actuals
+  a.deepEqual(actuals, [ 'ctx-write: something, 1', 'ctx-read: something, 1', 'read: 1' ])
+})
+
 export default tom
 
 /*

@@ -577,7 +577,6 @@ class Queue extends createMixin(Composite)(StateMachine) {
             this.jobStats.active++;
             const jobPromise = job.process()
               .then(result => {
-                // job.result = result
                 this.jobStats.active -= 1;
                 this.jobStats.complete += 1;
                 return result
@@ -700,6 +699,20 @@ class Work extends Emitter {
   async process () {
     return this.model.process()
   }
+
+  createContext () {
+    const work = this;
+    return new Proxy({}, {
+      get: function (target, prop, receiver) {
+        work.emit('ctx-read', prop, target[prop]);
+        return Reflect.get(...arguments)
+      },
+      set: function (target, prop, value, receiver) {
+        work.emit('ctx-write', prop, value);
+        return Reflect.set(...arguments)
+      }
+    })
+  }
 }
 
 class Job extends createMixin(Composite)(StateMachine) {
@@ -723,7 +736,6 @@ class Job extends createMixin(Composite)(StateMachine) {
     this.type = 'job';
     this.name = options.name;
     this.args = options.args;
-    // this.result
   }
 
   async process () {
@@ -743,8 +755,6 @@ class Job extends createMixin(Composite)(StateMachine) {
       } else {
         throw err
       }
-    } finally {
-      // this.setState('complete', this)
     }
   }
 
