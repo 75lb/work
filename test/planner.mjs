@@ -143,7 +143,7 @@ tom.test('nested queue', async function () {
   a.deepEqual(actuals, [1, 2])
 })
 
-tom.test('template', async function () {
+tom.test('template: evaluated immediately', async function () {
   const actuals = []
   const planner = new Planner()
   planner.addService({
@@ -165,6 +165,39 @@ tom.test('template', async function () {
   })
   await root.process()
   a.deepEqual(actuals, [1, 2])
+})
+
+tom.todo('template: deferred evaluation', async function () {
+  const actuals = []
+  const ctx = {}
+  const planner = new Planner(ctx)
+  planner.addService({
+    job1: n => actuals.push(n)
+  })
+  const root = planner.toModel({
+    type: 'queue',
+    queue: [
+      {
+        type: 'job',
+        fn: () => {
+          /* add items at run time */
+          ctx.items = [1, 2, 3]
+        }
+      },
+      {
+        type: 'template',
+        repeatForEach: () => ctx.items,
+        template: n => ({
+          type: 'job',
+          invoke: 'job1',
+          args: n
+        })
+      }
+    ]
+  })
+  await root.process()
+  this.data = actuals
+  // a.deepEqual(actuals, [1, 2, 3])
 })
 
 tom.test('addService: default', async function () {
@@ -241,7 +274,8 @@ tom.todo('template store', async function () {
 tom.test('loop', async function () {
   const actuals = []
   const ctx = {
-    items: [1, 2, 3]
+    items: [1, 2, 3],
+    args: n => n
   }
   const planner = new Planner(ctx)
   planner.addService({
@@ -250,8 +284,11 @@ tom.test('loop', async function () {
   const result = planner.toModel({
     type: 'loop',
     forEach: 'items',
-    invoke: 'job1',
-    args: ['${i}']
+    node: {
+      type: 'job',
+      invoke: 'job1'
+    },
+    args: 'args'
   })
   await result.process()
   // this.data = actuals

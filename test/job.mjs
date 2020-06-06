@@ -109,4 +109,16 @@ tom.skip('.result', async function () {
   a.deepEqual(actuals.data, [1])
 })
 
+tom.test('.onSuccess: job, default args', async function () {
+  const actuals = []
+  const job = new Job({
+    name: 'passing-fn',
+    fn: () => 'pass'
+  })
+  job.onSuccess = new Job({ fn: (result, parent) => actuals.push(result, parent.name) })
+  await job.process()
+  // this.data = actuals
+  a.deepEqual(actuals, ['pass', 'passing-fn'])
+})
+
 export default tom

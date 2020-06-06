@@ -512,9 +512,15 @@
     }
   }
 
+  class Node extends createMixin(Composite)(StateMachine) {
+    process () {
+      throw new Error('not implemented')
+    }
+  }
+
   const _maxConcurrency = new WeakMap();
 
-  class Queue extends createMixin(Composite)(StateMachine) {
+  class Queue extends Node {
     /**
      * @param {object} options
      * @param {function[]} options.jobs - An array of functions, each of which must return a Promise.
@@ -648,6 +654,50 @@
       }
     }
 
+    toNodeClass (plan) {
+      if (plan.type === 'job' && plan.invoke) {
+        const fn = this._getServiceFunction(plan);
+        return class Node extends Job {
+          constructor (options) {
+            super(options);
+            if (plan.onFail) {
+              this.onFail = this.toModel(plan.onFail);
+            }
+          }
+
+          fn (...args) {
+            return fn(...args)
+          }
+        }
+      } else if (plan.type === 'job' && plan.fn) {
+        if (plan.onFail) {
+          plan.onFail = this.toModel(plan.onFail);
+        }
+        return new Job(plan)
+      } else if (plan.type === 'queue' && plan.queue) {
+        const queue = new Queue(plan);
+        for (const item of plan.queue) {
+          queue.add(this.toModel(item));
+        }
+        return queue
+      } else if (plan.type === 'template' && plan.template) {
+        const queue = new Queue(plan);
+        const items = Array.isArray(plan.repeatForEach)
+          ? plan.repeatForEach
+          : plan.repeatForEach();
+        for (const i of items) {
+          // TODO: insert in place, rather than appending to end of queue
+          const node = this.toModel(plan.template(i));
+          queue.add(node);
+        }
+        return queue
+      } else if (plan.type === 'loop') ; else {
+        const err = new Error('invalid plan item type: ' + plan.type);
+        err.plan = plan;
+        throw err
+      }
+    }
+
     toModel (plan) {
       if (plan.type === 'job' && plan.invoke) {
         const fn = this._getServiceFunction(plan);
@@ -660,31 +710,29 @@
         if (plan.onFail) {
           plan.onFail = this.toModel(plan.onFail);
         }
-        const node = new Job(plan);
-        return node
+        return new Job(plan)
       } else if (plan.type === 'queue' && plan.queue) {
         const queue = new Queue(plan);
         for (const item of plan.queue) {
-          if (item.type === 'template' && item.template) {
-            const items = Array.isArray(item.repeatForEach)
-              ? item.repeatForEach
-              : item.repeatForEach();
-            for (const i of items) {
-              // TODO: insert in place, rather than appending to end of queue
-              const node = this.toModel(item.template(i));
-              queue.add(node);
-            }
-          } else {
-            const node = this.toModel(item);
-            queue.add(node);
-          }
+          queue.add(this.toModel(item));
         }
         return queue
-      } else if (plan.type === 'loop' && plan.invoke) {
+      } else if (plan.type === 'template' && plan.template) {
+        const queue = new Queue(plan);
+        const items = Array.isArray(plan.repeatForEach)
+          ? plan.repeatForEach
+          : plan.repeatForEach();
+        for (const i of items) {
+          // TODO: insert in place, rather than appending to end of queue
+          const node = this.toModel(plan.template(i));
+          queue.add(node);
+        }
+        return queue
+      } else if (plan.type === 'loop') {
         const loop = new Loop();
         loop.forEach = () => this.ctx[plan.forEach];
-        loop.fn = this._getServiceFunction(plan);
-        loop.args = plan.args;
+        loop.Node = this.toNodeClass(plan.node);
+        loop.args = this.ctx[plan.args];
         return loop
       } else {
         const err = new Error('invalid plan item type: ' + plan.type);
@@ -733,7 +781,7 @@
     }
   }
 
-  class Job extends createMixin(Composite)(StateMachine) {
+  class Job extends Node {
     constructor (options = {}) {
       super('pending', [
         { from: 'pending', to: 'in-progress' },
@@ -750,6 +798,9 @@
       if (options.onFail) {
         this.onFail = options.onFail;
       }
+      if (options.onSuccess) {
+        this.onSuccess = options.onSuccess;
+      }
       this.id = (Math.random() * 10e18).toString(16);
       this.type = 'job';
       this.name = options.name;
@@ -761,6 +812,13 @@
         this.setState('in-progress', this);
         const result = await this.fn(...(args.length ? args : arrayify(this.args)));
         this.setState('successful', this);
+        if (this.onSuccess) {
+          if (!(this.onSuccess.args && this.onSuccess.args.length)) {
+            this.onSuccess.args = [result, this];
+          }
+          this.add(this.onSuccess);
+          await this.onSuccess.process();
+        }
         return result
       } catch (err) {
         this.setState('failed', this);
@@ -769,7 +827,7 @@
             this.onFail.args = [err, this];
           }
           this.add(this.onFail);
-          return this.onFail.process()
+          await this.onFail.process();
         } else {
           throw err
         }
@@ -795,27 +853,24 @@
   }
 
   class Loop extends Queue {
-    constructor (options) {
+    constructor (options = {}) {
       super(options);
       this.type = 'loop';
-      this.forEach = options && options.forEach;
+      this.forEach = options.forEach;
+      this.Node = options.Node;
     }
 
     async process () {
+      /* build queue children */
       const iterable = this.forEach();
       for (const i of iterable) {
-        const job = new Job();
-        job.name = 'loop';
-        job.fn = this.fn;
-        job.args = this.args.slice().map(arg => {
-          if (arg === '${i}') {
-            return i
-          } else {
-            return arg.replace('${i}', i)
-          }
-        });
-        this.add(job);
+        const node = new this.Node();
+        node.name = 'loop';
+        const args = this.args(i);
+        node.args = node.args || args;
+        this.add(node);
       }
+      /* process queue */
       return super.process()
     }
   }
