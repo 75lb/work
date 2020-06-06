@@ -241,40 +241,6 @@ tom.test('test-runner style: exception handling', async function () {
   ])
 })
 
-tom.skip('simple model, job root', async function () {
-  const actuals = []
-  const root = new Job(() => {
-    actuals.push(1)
-  })
-  const work = new Work()
-  await work.process(root)
-  a.deepEqual(actuals, [1])
-})
-
-tom.skip('simple model, queue root', async function () {
-  const actuals = []
-  const root = new Queue()
-  root.add(new Job(() => {
-    actuals.push(1)
-  }))
-  const work = new Work()
-  await work.process(root)
-  a.deepEqual(actuals, [1])
-})
-
-tom.skip('model from planner', async function () {
-  const actuals = []
-  const planner = new Planner()
-  const model = planner.toModel({
-    type: 'job',
-    fn: n => actuals.push(n),
-    args: 1
-  })
-  const work = new Work()
-  await work.process(model)
-  a.deepEqual(actuals, [1])
-})
-
 tom.test('createContext()', async function () {
   const actuals = []
   const work = new Work()

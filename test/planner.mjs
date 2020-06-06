@@ -247,30 +247,6 @@ tom.test('addService: named and default', async function () {
   a.ok(!planner.services.service1.job2)
 })
 
-tom.todo('template store', async function () {
-  planner.addTemplate('name', function () {
-    return {
-      type: 'job',
-      invoke: 'fetchFromCache',
-      args: [user.github, 'githubUser', 'githubUser'],
-      onFail: {
-        type: 'queue',
-        queue: [
-          {
-            type: 'job',
-            invoke: 'collectGithubUser'
-          },
-          {
-            type: 'job',
-            invoke: 'updateCache',
-            args: [user.github, 'githubUser', 'githubUser']
-          }
-        ]
-      }
-    }
-  })
-})
-
 tom.test('loop', async function () {
   const actuals = []
   const ctx = {

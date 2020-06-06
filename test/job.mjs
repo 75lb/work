@@ -98,17 +98,6 @@ tom.test('events', async function () {
   a.deepEqual(actuals, [ 'in-progress', 1, 'successful' ])
 })
 
-tom.skip('.result', async function () {
-  const actuals = { data: null }
-  const job = new Job({
-    fn: n => n,
-    result: actuals
-  })
-  job.args = [1]
-  await job.process()
-  a.deepEqual(actuals.data, [1])
-})
-
 tom.test('.onSuccess: job, default args', async function () {
   const actuals = []
   const job = new Job({
@@ -117,7 +106,6 @@ tom.test('.onSuccess: job, default args', async function () {
   })
   job.onSuccess = new Job({ fn: (result, parent) => actuals.push(result, parent.name) })
   await job.process()
-  // this.data = actuals
   a.deepEqual(actuals, ['pass', 'passing-fn'])
 })
 
