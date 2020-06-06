@@ -615,8 +615,9 @@ class Queue extends createMixin(Composite)(StateMachine) {
 }
 
 class Planner {
-  constructor () {
+  constructor (ctx) {
     this.services = { default: {} };
+    this.ctx = ctx;
   }
 
   addService (...args) {
@@ -631,26 +632,31 @@ class Planner {
     }
   }
 
+  _getServiceFunction (plan) {
+    const service = this.services[plan.service || 'default'];
+    const fn = service[plan.invoke];
+    if (fn) {
+      return fn.bind(service)
+    } else {
+      throw new Error('Could not find function: ' + plan.invoke)
+    }
+  }
+
   toModel (plan) {
     if (plan.type === 'job' && plan.invoke) {
-      const service = this.services[plan.service || 'default'];
-      const fn = service[plan.invoke];
-      if (fn) {
-        if (plan.onFail) {
-          plan.onFail = this.toModel(plan.onFail);
-        }
-        plan.fn = fn.bind(service);
-        return new Job(plan)
-      } else {
-        throw new Error('Could not find function: ' + plan.invoke)
+      const fn = this._getServiceFunction(plan);
+      if (plan.onFail) {
+        plan.onFail = this.toModel(plan.onFail);
       }
+      plan.fn = fn;
+      return new Job(plan)
     } else if (plan.type === 'job' && plan.fn) {
       if (plan.onFail) {
         plan.onFail = this.toModel(plan.onFail);
       }
       const node = new Job(plan);
       return node
-    } else if (plan.type =  plan.queue) {
+    } else if (plan.type === 'queue' && plan.queue) {
       const queue = new Queue(plan);
       for (const item of plan.queue) {
         if (item.type === 'template' && item.template) {
@@ -668,6 +674,12 @@ class Planner {
         }
       }
       return queue
+    } else if (plan.type === 'loop' && plan.invoke) {
+      const loop = new Loop();
+      loop.forEach = () => this.ctx[plan.forEach];
+      loop.fn = this._getServiceFunction(plan);
+      loop.args = plan.args;
+      return loop
     } else {
       const err = new Error('invalid plan item type: ' + plan.type);
       err.plan = plan;
@@ -738,10 +750,10 @@ class Job extends createMixin(Composite)(StateMachine) {
     this.args = options.args;
   }
 
-  async process () {
+  async process (...args) {
     try {
       this.setState('in-progress', this);
-      const result = await this.fn(...arrayify(this.args));
+      const result = await this.fn(...(args.length ? args : arrayify(this.args)));
       this.setState('successful', this);
       return result
     } catch (err) {
@@ -776,4 +788,30 @@ class Job extends createMixin(Composite)(StateMachine) {
   }
 }
 
-export { Job, Planner, Queue, Work };
+class Loop extends Queue {
+  constructor (options) {
+    super(options);
+    this.type = 'loop';
+    this.forEach = options && options.forEach;
+  }
+
+  async process () {
+    const iterable = this.forEach();
+    for (const i of iterable) {
+      const job = new Job();
+      job.name = 'loop';
+      job.fn = this.fn;
+      job.args = this.args.slice().map(arg => {
+        if (arg === '${i}') {
+          return i
+        } else {
+          return arg.replace('${i}', i)
+        }
+      });
+      this.add(job);
+    }
+    return super.process()
+  }
+}
+
+export { Job, Loop, Planner, Queue, Work };

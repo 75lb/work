@@ -81,7 +81,7 @@ tom.test('job.args', async function () {
   a.deepEqual(actuals, [1, 2, 3])
 })
 
-tom.skip('.process(args)', async function () {
+tom.test('.process(args) overrides .args', async function () {
   const actuals = []
   const job = new Job({ fn: (...args) => { actuals.push(...args) } })
   job.args = [-1, -2, -3]

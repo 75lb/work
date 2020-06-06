@@ -238,4 +238,24 @@ tom.todo('template store', async function () {
   })
 })
 
+tom.test('loop', async function () {
+  const actuals = []
+  const ctx = {
+    items: [1, 2, 3]
+  }
+  const planner = new Planner(ctx)
+  planner.addService({
+    job1: n => actuals.push(n)
+  })
+  const result = planner.toModel({
+    type: 'loop',
+    forEach: 'items',
+    invoke: 'job1',
+    args: ['${i}']
+  })
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [1, 2, 3])
+})
+
 export default tom
