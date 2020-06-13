@@ -512,7 +512,37 @@
     }
   }
 
+  class Scope extends Map {
+    constructor (iterable, node) {
+      super(iterable);
+      this.node = node;
+    }
+    get (key) {
+      if (this.has(key)) {
+        return super.get(key)
+      } else if (this.node && this.node.parent) {
+        return this.node.parent.scope.get(key)
+      }
+    }
+  }
+
   class Node extends createMixin(Composite)(StateMachine) {
+    constructor (options = {}) {
+      super('pending', [
+        { from: 'pending', to: 'in-progress' },
+        { from: 'in-progress', to: 'failed' },
+        { from: 'in-progress', to: 'successful' },
+        { from: 'failed', to: 'complete' },
+        { from: 'successful', to: 'complete' },
+        { from: 'pending', to: 'cancelled' },
+        { from: 'in-progress', to: 'cancelled' }
+      ]);
+      this.scope = new Scope(null, this);
+      for (const prop in options.scope) {
+        this.scope.set(prop, options.scope[prop]);
+      }
+    }
+
     process () {
       throw new Error('not implemented')
     }
@@ -529,15 +559,7 @@
      * @emits job-end
      */
     constructor (options) {
-      super('pending', [
-        { from: 'pending', to: 'in-progress' },
-        { from: 'in-progress', to: 'failed' },
-        { from: 'in-progress', to: 'successful' },
-        { from: 'failed', to: 'complete' },
-        { from: 'successful', to: 'complete' },
-        { from: 'pending', to: 'cancelled' },
-        { from: 'in-progress', to: 'cancelled' },
-      ]);
+      super(options);
       options = Object.assign({
         jobs: [],
         maxConcurrency: 1
@@ -783,15 +805,7 @@
 
   class Job extends Node {
     constructor (options = {}) {
-      super('pending', [
-        { from: 'pending', to: 'in-progress' },
-        { from: 'in-progress', to: 'failed' },
-        { from: 'in-progress', to: 'successful' },
-        { from: 'failed', to: 'complete' },
-        { from: 'successful', to: 'complete' },
-        { from: 'pending', to: 'cancelled' },
-        { from: 'in-progress', to: 'cancelled' },
-      ]);
+      super(options);
       if (options.fn) {
         this.fn = options.fn;
       }
@@ -805,12 +819,19 @@
       this.type = 'job';
       this.name = options.name;
       this.args = options.args;
+      this.argsFn = options.argsFn;
     }
 
     async process (...args) {
       try {
         this.setState('in-progress', this);
-        const result = await this.fn(...(args.length ? args : arrayify(this.args)));
+        const result = await this.fn(...(
+          args.length
+            ? args
+            : this.argsFn
+              ? arrayify(this.argsFn())
+              : arrayify(this.args))
+        );
         this.setState('successful', this);
         if (this.onSuccess) {
           if (!(this.onSuccess.args && this.onSuccess.args.length)) {
@@ -857,18 +878,32 @@
       super(options);
       this.type = 'loop';
       this.forEach = options.forEach;
+      this.for = options.for;
+      /**
+       * A new instance will be created on each iteration.
+       */
       this.Node = options.Node;
     }
 
     async process () {
       /* build queue children */
-      const iterable = this.forEach();
-      for (const i of iterable) {
-        const node = new this.Node();
-        node.name = 'loop';
-        const args = this.args(i);
-        node.args = node.args || args;
-        this.add(node);
+      if (this.for) {
+        const { var: varName, of: iterable } = this.for();
+        for (const i of iterable) {
+          const node = new this.Node();
+          node.name = 'loop';
+          node.scope.set(varName, i);
+          this.add(node);
+        }
+      } else if (this.forEach) {
+        const iterable = this.forEach();
+        for (const i of iterable) {
+          const node = new this.Node();
+          node.name = 'loop';
+          const args = this.args(i);
+          node.args = node.args || args;
+          this.add(node);
+        }
       }
       /* process queue */
       return super.process()
@@ -877,6 +912,7 @@
 
   exports.Job = Job;
   exports.Loop = Loop;
+  exports.Node = Node;
   exports.Planner = Planner;
   exports.Queue = Queue;
   exports.Work = Work;

@@ -10,7 +10,7 @@ tom.test('toModel(job): invoke', async function () {
   const planner = new Planner()
   planner.addService({
     job1: n => { actuals.push(n) },
-    job2: n => { actuals.push(n) },
+    job2: n => { actuals.push(n) }
   })
   const result = planner.toModel({
     type: 'job',
@@ -46,7 +46,7 @@ tom.test('toModel(job): fn, invoke', async function () {
   const planner = new Planner()
   const job1 = n => { actuals.push(n) }
   planner.addService({
-    job2: n => { actuals.push(n) },
+    job2: n => { actuals.push(n) }
   })
   const result = planner.toModel({
     type: 'job',
@@ -269,6 +269,66 @@ tom.test('loop', async function () {
   await result.process()
   // this.data = actuals
   a.deepEqual(actuals, [1, 2, 3])
+})
+
+tom.skip('loop: complex', async function () {
+  const actuals = []
+  const ctx = {
+    orgs: ['org1', 'org2'],
+    args: org => org
+  }
+  const planner = new Planner(ctx)
+  planner.addService('cache', {
+    fetch: (...args) => {
+      actuals.push(args)
+      throw new Error('failed')
+    }
+  })
+  /*
+  separate args and closure (inner nodes can access closure of outer nodes)
+   */
+  const result = planner.toModel({
+    type: 'loop',
+    for: { var: 'org', of: 'orgs' },
+    node: {
+      name: 'contributionsPerOrg',
+      type: 'queue',
+      queue: [
+        {
+          type: 'job',
+          service: 'cache',
+          invoke: 'fetch',
+          args: ['75lb', `contributionsPerOrg:${org.id}`, `contributionsPerOrg:${org.id}`],
+          onFail: {
+            type: 'queue',
+            name: 'refresh',
+            queue: [
+              {
+                type: 'job',
+                service: 'contributionsPerOrg',
+                invoke: 'collect',
+                args: '75lb'
+              },
+              {
+                type: 'job',
+                service: 'cache',
+                invoke: 'update',
+                args: ['75lb', `contributionsPerOrg:${org.id}`, `contributionsPerOrg:${org.id}`]
+              }
+            ]
+          }
+        },
+        {
+          type: 'job',
+          service: 'contributionsPerOrg',
+          invoke: 'display'
+        }
+      ]
+    }
+  })
+  await result.process()
+  this.data = actuals
+  // a.deepEqual(actuals, [1, 2, 3])
 })
 
 export default tom

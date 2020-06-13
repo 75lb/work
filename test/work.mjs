@@ -1,12 +1,12 @@
 import TestRunner from 'test-runner'
-import { Work, Job, Queue, Planner } from '../index.mjs'
+import { Work, Job, Queue, Planner, Loop } from '../index.mjs'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'
 
 const a = assert.strict
 const tom = new TestRunner.Tom()
 
-tom.test('work strategy', async function () {
+tom.test('work plan', async function () {
   const actuals = []
   const work = new Work()
   work.ctx = {
@@ -202,42 +202,16 @@ tom.test('test-runner style: exception handling', async function () {
     actuals.push(err.message)
   })
 
-  // class DefaultExceptionHandlingStrategy {
-  //   catch (err, job) {
-  //     work.emit('fail', err, job)
-  //     throw err
-  //   }
-  // }
-
-  // class KeepGoingStrategy {
-  //   constructor (runner) {
-  //     this.runner = runner
-  //   }
-
-  //   catch (err, job) {
-  //     this.state = 'fail'
-  //     if (this.options.debug) {
-  //       console.error('DEBUG')
-  //       console.error(err)
-  //     }
-  //   }
-  // }
-
-  // work.exceptionHandlingStrategy = new KeepGoingStrategy({ state: 'pending' })
   await work.process()
-  // for (const node of work) {
-    // console.log('node', await node.constructor.name)
-  // }
-
   a.deepEqual(actuals, [
-   'before',
-   'one',
-   'failed',
-   'failing-test',
-   'after',
-   'template: 1',
-   'template: 2',
-   'template: 3'
+    'before',
+    'one',
+    'failed',
+    'failing-test',
+    'after',
+    'template: 1',
+    'template: 2',
+    'template: 3'
   ])
 })
 
@@ -254,7 +228,114 @@ tom.test('createContext()', async function () {
   ctx.something = 1
   actuals.push('read: ' + ctx.something)
   // this.data = actuals
-  a.deepEqual(actuals, [ 'ctx-write: something, 1', 'ctx-read: something, 1', 'read: 1' ])
+  a.deepEqual(actuals, ['ctx-write: something, 1', 'ctx-read: something, 1', 'read: 1'])
+})
+
+tom.test('scope', async function () {
+  const actuals = []
+  const job = new Job({
+    fn: function () {
+      actuals.push(this.scope.get('value'))
+    },
+    scope: {
+      value: 'a'
+    }
+  })
+  await job.process()
+  a.deepEqual(actuals, ['a'])
+})
+
+tom.test('scope, level 2', async function () {
+  const actuals = []
+  const queue = new Queue({ scope: { value: 'a' } })
+  queue.add(new Job({
+    fn: function () {
+      actuals.push(this.scope.get('value'))
+    },
+    scope: {
+      value: 'b'
+    }
+  }))
+  queue.add(new Job({
+    fn: function () {
+      actuals.push(this.scope.get('value'))
+    },
+    scope: {}
+  }))
+  await queue.process()
+  // this.data = actuals
+  a.deepEqual(actuals, ['b', 'a'])
+})
+
+tom.test('complex model', async function () {
+  const actuals = []
+
+  class Cache {
+    fetch (pk, sk) {
+      actuals.push(['fetch', pk, sk])
+      throw new Error('failed')
+    }
+
+    update (pk, sk) {
+      actuals.push(['update', pk, sk])
+    }
+
+    collect (user) {
+      actuals.push(['collect', user])
+    }
+
+    display () {
+      actuals.push(['display'])
+    }
+  }
+  const cache = new Cache()
+
+  const loop = new Loop()
+  loop.for = () => ({ var: 'org', of: ['org1', 'org2'] })
+  loop.Node = class OrgQueue extends Queue {
+    constructor (options) {
+      super(options)
+      /* get data */
+      this.add(new Job({
+        fn: cache.fetch.bind(cache),
+        argsFn: function () {
+          return ['75lb', `perOrg:${this.scope.get('org')}`]
+        },
+        onFail: new Queue({
+          name: 'refresh',
+          jobs: [
+            new Job({
+              fn: cache.collect.bind(cache),
+              args: '75lb'
+            }),
+            new Job({
+              fn: cache.update.bind(cache),
+              argsFn: function () {
+                return ['75lb', `perOrg:${this.scope.get('org')}`]
+              }
+            })
+          ]
+        })
+      }))
+      /* display data */
+      this.add(new Job({
+        fn: cache.display,
+      }))
+    }
+  }
+
+  await loop.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [
+    [ 'fetch', '75lb', 'perOrg:org1' ],
+    [ 'collect', '75lb' ],
+    [ 'update', '75lb', 'perOrg:org1' ],
+    [ 'display' ],
+    [ 'fetch', '75lb', 'perOrg:org2' ],
+    [ 'collect', '75lb' ],
+    [ 'update', '75lb', 'perOrg:org2' ],
+    [ 'display' ]
+  ])
 })
 
 export default tom
@@ -280,3 +361,6 @@ export default tom
     - The context data it reads and writes
 */
 
+/*
+
+*/

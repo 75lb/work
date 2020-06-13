@@ -81,6 +81,15 @@ tom.test('job.args', async function () {
   a.deepEqual(actuals, [1, 2, 3])
 })
 
+tom.test('job.argsFn', async function () {
+  const actuals = []
+  const job = new Job()
+  job.fn = function (...args) { actuals.push(...args) }
+  job.argsFn = () => [1, 2, 3]
+  await job.process()
+  a.deepEqual(actuals, [1, 2, 3])
+})
+
 tom.test('.process(args) overrides .args', async function () {
   const actuals = []
   const job = new Job({ fn: (...args) => { actuals.push(...args) } })
@@ -95,7 +104,7 @@ tom.test('events', async function () {
   job.args = [1]
   job.on('state', (state) => actuals.push(state))
   await job.process()
-  a.deepEqual(actuals, [ 'in-progress', 1, 'successful' ])
+  a.deepEqual(actuals, ['in-progress', 1, 'successful'])
 })
 
 tom.test('.onSuccess: job, default args', async function () {

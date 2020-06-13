@@ -3,5 +3,6 @@ import Work from './lib/work.mjs'
 import Job from './lib/job.mjs'
 import Planner from './lib/planner.mjs'
 import Loop from './lib/loop.mjs'
+import Node from './lib/node.mjs'
 
-export { Queue, Work, Job, Planner, Loop }
+export { Queue, Work, Job, Planner, Loop, Node }

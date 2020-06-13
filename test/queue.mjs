@@ -48,55 +48,55 @@ tom.test('.process(): events', async function () {
   await queue.process()
   // this.data = actuals
   a.deepEqual(actuals, [
-     [
-       'queue1',
-       'in-progress',
-       'pending',
-       { total: 3, complete: 0, active: 0 }
-     ],
-     [
-       'job1',
-       'in-progress',
-       'pending',
-       { total: 3, complete: 0, active: 1 }
-     ],
-     [
-       'job1',
-       'successful',
-       'in-progress',
-       { total: 3, complete: 0, active: 1 }
-     ],
-     [
-       'job2',
-       'in-progress',
-       'pending',
-       { total: 3, complete: 1, active: 1 }
-     ],
-     [
-       'job2',
-       'successful',
-       'in-progress',
-       { total: 3, complete: 1, active: 1 }
-     ],
-     [
-       'job3',
-       'in-progress',
-       'pending',
-       { total: 3, complete: 2, active: 1 }
-     ],
-     [
-       'job3',
-       'successful',
-       'in-progress',
-       { total: 3, complete: 2, active: 1 }
-     ],
-     [
-       'queue1',
-       'successful',
-       'in-progress',
-       { total: 3, complete: 3, active: 0 }
-     ]
-   ])
+    [
+      'queue1',
+      'in-progress',
+      'pending',
+      { total: 3, complete: 0, active: 0 }
+    ],
+    [
+      'job1',
+      'in-progress',
+      'pending',
+      { total: 3, complete: 0, active: 1 }
+    ],
+    [
+      'job1',
+      'successful',
+      'in-progress',
+      { total: 3, complete: 0, active: 1 }
+    ],
+    [
+      'job2',
+      'in-progress',
+      'pending',
+      { total: 3, complete: 1, active: 1 }
+    ],
+    [
+      'job2',
+      'successful',
+      'in-progress',
+      { total: 3, complete: 1, active: 1 }
+    ],
+    [
+      'job3',
+      'in-progress',
+      'pending',
+      { total: 3, complete: 2, active: 1 }
+    ],
+    [
+      'job3',
+      'successful',
+      'in-progress',
+      { total: 3, complete: 2, active: 1 }
+    ],
+    [
+      'queue1',
+      'successful',
+      'in-progress',
+      { total: 3, complete: 3, active: 0 }
+    ]
+  ])
 })
 
 tom.test('.process(): maxConcurrency 3, results still in job order', async function () {
