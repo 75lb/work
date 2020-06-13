@@ -271,22 +271,33 @@ tom.test('loop', async function () {
   a.deepEqual(actuals, [1, 2, 3])
 })
 
-tom.skip('loop: complex', async function () {
+tom.test('loop: complex', async function () {
   const actuals = []
   const ctx = {
-    orgs: ['org1', 'org2'],
-    args: org => org
+    orgs: () => [{ id: 1 }, { id: 2 }]
   }
   const planner = new Planner(ctx)
-  planner.addService('cache', {
-    fetch: (...args) => {
-      actuals.push(args)
+  class Cache {
+    fetch (pk, sk) {
+      actuals.push(['fetch', pk, sk])
       throw new Error('failed')
     }
-  })
-  /*
-  separate args and closure (inner nodes can access closure of outer nodes)
-   */
+
+    update (pk, sk) {
+      actuals.push(['update', pk, sk])
+    }
+
+    collect (user) {
+      actuals.push(['collect', user])
+    }
+
+    display () {
+      actuals.push(['display'])
+    }
+  }
+  const cache = new Cache()
+  planner.addService('cache', cache)
+
   const result = planner.toModel({
     type: 'loop',
     for: { var: 'org', of: 'orgs' },
@@ -298,14 +309,14 @@ tom.skip('loop: complex', async function () {
           type: 'job',
           service: 'cache',
           invoke: 'fetch',
-          args: ['75lb', `contributionsPerOrg:${org.id}`, `contributionsPerOrg:${org.id}`],
+          args: ['75lb', "contributionsPerOrg:${scope.get('org').id}"],
           onFail: {
             type: 'queue',
             name: 'refresh',
             queue: [
               {
                 type: 'job',
-                service: 'contributionsPerOrg',
+                service: 'cache',
                 invoke: 'collect',
                 args: '75lb'
               },
@@ -313,22 +324,48 @@ tom.skip('loop: complex', async function () {
                 type: 'job',
                 service: 'cache',
                 invoke: 'update',
-                args: ['75lb', `contributionsPerOrg:${org.id}`, `contributionsPerOrg:${org.id}`]
+                args: ['75lb', "contributionsPerOrg:${scope.get('org').id}"]
               }
             ]
           }
         },
         {
           type: 'job',
-          service: 'contributionsPerOrg',
+          service: 'cache',
           invoke: 'display'
         }
       ]
     }
   })
   await result.process()
-  this.data = actuals
-  // a.deepEqual(actuals, [1, 2, 3])
+  // this.data = actuals
+  a.deepEqual(actuals, [
+    [ 'fetch', '75lb', 'contributionsPerOrg:1' ],
+    [ 'collect', '75lb' ],
+    [ 'update', '75lb', 'contributionsPerOrg:1' ],
+    [ 'display' ],
+    [ 'fetch', '75lb', 'contributionsPerOrg:2' ],
+    [ 'collect', '75lb' ],
+    [ 'update', '75lb', 'contributionsPerOrg:2' ],
+    [ 'display' ]
+  ])
+})
+
+tom.test('scope access in args', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    job1: (...args) => { actuals.push(...args) }
+  })
+  const result = planner.toModel({
+    type: 'job',
+    invoke: 'job1',
+    args: ['${scope.get("two")}', '•two']
+  })
+  result.scope.set('two', 2)
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, ['2', 2])
 })
 
 export default tom

@@ -319,7 +319,7 @@ tom.test('complex model', async function () {
       }))
       /* display data */
       this.add(new Job({
-        fn: cache.display,
+        fn: cache.display
       }))
     }
   }
@@ -327,14 +327,14 @@ tom.test('complex model', async function () {
   await loop.process()
   // this.data = actuals
   a.deepEqual(actuals, [
-    [ 'fetch', '75lb', 'perOrg:org1' ],
-    [ 'collect', '75lb' ],
-    [ 'update', '75lb', 'perOrg:org1' ],
-    [ 'display' ],
-    [ 'fetch', '75lb', 'perOrg:org2' ],
-    [ 'collect', '75lb' ],
-    [ 'update', '75lb', 'perOrg:org2' ],
-    [ 'display' ]
+    ['fetch', '75lb', 'perOrg:org1'],
+    ['collect', '75lb'],
+    ['update', '75lb', 'perOrg:org1'],
+    ['display'],
+    ['fetch', '75lb', 'perOrg:org2'],
+    ['collect', '75lb'],
+    ['update', '75lb', 'perOrg:org2'],
+    ['display']
   ])
 })
 
