@@ -14,7 +14,7 @@ tom.test('loop: forEach', async function () {
       actuals.push(a, b)
     }
   }
-  loop.args = i => [i, `arg: ${i}`]
+  loop.argsFn = i => [i, `arg: ${i}`]
   await loop.process()
   a.deepEqual(actuals, [1, 'arg: 1', 2, 'arg: 2', 3, 'arg: 3'])
 })

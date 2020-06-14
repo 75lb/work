@@ -506,21 +506,6 @@ function createMixin (Src) {
   }
 }
 
-class Scope extends Map {
-  constructor (iterable, node) {
-    super(iterable);
-    this.node = node;
-  }
-
-  get (key) {
-    if (this.has(key)) {
-      return super.get(key)
-    } else if (this.node && this.node.parent) {
-      return this.node.parent.scope.get(key)
-    }
-  }
-}
-
 class Node extends createMixin(Composite)(StateMachine) {
   constructor (options = {}) {
     super('pending', [
@@ -532,6 +517,9 @@ class Node extends createMixin(Composite)(StateMachine) {
       { from: 'pending', to: 'cancelled' },
       { from: 'in-progress', to: 'cancelled' }
     ]);
+    this.name = options.name;
+    if (options.args) this.args = options.args;
+    if (options.argsFn) this.argsFn = options.argsFn;
     this.scope = new Scope(null, this);
     for (const prop in options.scope) {
       this.scope.set(prop, options.scope[prop]);
@@ -552,6 +540,29 @@ class Node extends createMixin(Composite)(StateMachine) {
       const line = `${indent}- ${curr}\n`;
       return (prev += line)
     }, '')
+  }
+
+  _getArgs (fnArgs, argsFnArg) {
+    return fnArgs.length
+      ? fnArgs
+      : this.argsFn
+        ? arrayify(this.argsFn(argsFnArg))
+        : arrayify(this.args)
+  }
+}
+
+class Scope extends Map {
+  constructor (iterable, node) {
+    super(iterable);
+    this.node = node;
+  }
+
+  get (key) {
+    if (this.has(key)) {
+      return super.get(key)
+    } else if (this.node && this.node.parent) {
+      return this.node.parent.scope.get(key)
+    }
   }
 }
 
@@ -578,7 +589,6 @@ class Queue extends Node {
     };
     this.id = (Math.random() * 10e18).toString(16);
     this.maxConcurrency = options.maxConcurrency;
-    this.name = options.name;
     this.type = 'queue';
     for (const job of options.jobs) {
       this.add(job);
@@ -756,9 +766,8 @@ class Planner {
         loop.for = () => ({ var: plan.for.var, of: this.ctx[plan.for.of]() });
       }
       loop.Node = this.toNodeClass(plan.node);
-      if (plan.args) {
-        loop.args = this.ctx[plan.args];
-      }
+      if (plan.args) loop.args = this.ctx[plan.args];
+      if (plan.argsFn) loop.argsFn = this.ctx[plan.argsFn];
       return loop
     } else {
       const err = new Error('invalid plan item type: ' + plan.type);
@@ -819,23 +828,24 @@ class Job extends Node {
     if (options.onSuccess) {
       this.onSuccess = options.onSuccess;
     }
+    if (options.result) {
+      /**
+       * Write result to this scope key.
+       */
+      this.result = options.result;
+    }
     this.id = (Math.random() * 10e18).toString(16);
     this.type = 'job';
-    this.name = options.name;
-    this.args = options.args;
-    this.argsFn = options.argsFn;
   }
 
-  async process (...args) {
+  async process (...fnArgs) {
     try {
       this.setState('in-progress', this);
-      const result = await this.fn(...(
-        args.length
-          ? args
-          : this.argsFn
-            ? arrayify(this.argsFn())
-            : arrayify(this.args))
-      );
+      const args = this._getArgs(fnArgs);
+      const result = await this.fn(...args);
+      if (this.result) {
+        this.scope.set(this.result, result);
+      }
       this.setState('successful', this);
       if (this.onSuccess) {
         if (!(this.onSuccess.args && this.onSuccess.args.length)) {
@@ -877,22 +887,22 @@ class Loop extends Queue {
     this.Node = options.Node;
   }
 
-  async process () {
+  async process (...fnArgs) {
     /* build queue children */
     if (this.for) {
       const { var: varName, of: iterable } = this.for();
       for (const i of iterable) {
         const node = new this.Node();
-        node.name = 'loop';
         node.scope.set(varName, i);
+        const args = this._getArgs(fnArgs, i);
+        node.args = node.args || args;
         this.add(node);
       }
     } else if (this.forEach) {
       const iterable = this.forEach();
       for (const i of iterable) {
         const node = new this.Node();
-        node.name = 'loop';
-        const args = this.args(i);
+        const args = this._getArgs(fnArgs, i);
         node.args = node.args || args;
         this.add(node);
       }

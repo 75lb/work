@@ -264,7 +264,7 @@ tom.test('loop', async function () {
       type: 'job',
       invoke: 'job1'
     },
-    args: 'args'
+    argsFn: 'args'
   })
   await result.process()
   // this.data = actuals
