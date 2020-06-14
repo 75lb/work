@@ -21,10 +21,12 @@
     "composite-class": "^2.0.1",
     "create-mixin": "^3.0.0",
     "fsm-base": "^0.6.0",
+    "lodash.get": "^4.4.2",
     "obso": "^0.6.0",
     "typical": "^6.0.1"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^13.0.0",
     "esm-runner": "^0.3.4",
     "rollup": "^2.13.1",
     "rollup-plugin-node-resolve": "^5.2.0",

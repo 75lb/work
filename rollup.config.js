@@ -1,4 +1,5 @@
 const resolve = require('rollup-plugin-node-resolve')
+const commonJs = require('@rollup/plugin-commonjs')
 
 module.exports = [
   {
@@ -6,10 +7,10 @@ module.exports = [
     output: {
       file: 'dist/index.js',
       format: 'umd',
-      name: 'Queue'
+      name: 'work'
     },
     external: [],
-    plugins: [resolve({ preferBuiltins: true })]
+    plugins: [resolve({ preferBuiltins: true }), commonJs()]
   },
   {
     input: 'index.mjs',
@@ -18,6 +19,6 @@ module.exports = [
       format: 'esm'
     },
     external: [],
-    plugins: [resolve({ preferBuiltins: true })]
+    plugins: [resolve({ preferBuiltins: true }), commonJs()]
   }
 ]

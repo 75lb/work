@@ -180,15 +180,96 @@ tom.test('sync jobs', async function () {
   a.deepEqual(result, [1, 2])
 })
 
-tom.todo('onFail', async function () {
+tom.test('onFail', async function () {
   const actuals = []
   const queue = new Queue()
-  queue.add(new Job(() => {
-    throw new Error('broken')
+  queue.add(new Job({
+    fn: () => { throw new Error('broken') }
   }))
   queue.onFail = new Job({ fn: () => { actuals.push(1) } })
   await queue.process()
-  console.log(actuals)
+  // this.data = actuals
+  a.deepEqual(actuals, [1])
+})
+
+tom.test('onFail cancels processing of queue', async function () {
+  const actuals = []
+  const queue = new Queue({
+    jobs: [
+      new Job({
+        fn: () => { throw new Error('broken') }
+      }),
+      new Job({ fn: () => { actuals.push('Never reaches here') } })
+    ],
+    onFail: new Job({ fn: err => actuals.push(1) })
+  })
+  await queue.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [1])
+})
+
+tom.test('job.onFail job completes before queue moves on', async function () {
+  const actuals = []
+  const queue = new Queue({
+    jobs: [
+      new Job({
+        fn: () => { throw new Error('broken') },
+        onFail: new Job({
+          fn: async err => {
+            await sleep(10)
+            actuals.push(err.message)
+          }
+        })
+      }),
+      new Job({ fn: () => { actuals.push(3) } })
+    ],
+  })
+  await queue.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [ 'broken', 3 ])
+})
+
+tom.test('job.onFail queue completes before queue moves on', async function () {
+  const actuals = []
+  const queue = new Queue({
+    jobs: [
+      new Job({
+        fn: () => { throw new Error('broken') },
+        onFail: new Queue({
+          jobs: [
+            new Job({
+              fn: async () => {
+                await sleep(10)
+                actuals.push('onFail')
+              }
+            }),
+            new Job({
+              fn: async () => {
+                await sleep(10)
+                actuals.push('onFail2')
+              }
+            })
+          ]
+        })
+      }),
+      new Job({ fn: () => { actuals.push(3) } })
+    ],
+  })
+  await queue.process()
+  // this.data = actuals
+  a.deepEqual(actuals, ['onFail', 'onFail2', 3])
+})
+
+tom.test('onSuccess', async function () {
+  const actuals = []
+  const queue = new Queue()
+  queue.add(new Job({
+    fn: () => { actuals.push(1) }
+  }))
+  queue.onSuccess = new Job({ fn: () => { actuals.push(2) } })
+  await queue.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [1,2])
 })
 
 tom.todo('break', async function () {
@@ -197,6 +278,10 @@ tom.todo('break', async function () {
 
 tom.todo('condition', async function () {
   /* only process queue if `.condition` is truthy, e.g. `condition: user.npm` */
+})
+
+tom.todo('queue jobs are called with queue.args', async function () {
+  /* an onFail queue is called with err in the args, this must be passed to child jobs */
 })
 
 export default tom
