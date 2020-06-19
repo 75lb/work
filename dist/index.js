@@ -1453,10 +1453,11 @@
     constructor (options = {}) {
       super('pending', [
         { from: 'pending', to: 'in-progress' },
+        { from: 'pending', to: 'skipped' },
         { from: 'in-progress', to: 'failed' },
         { from: 'in-progress', to: 'successful' },
-        { from: 'failed', to: 'complete' },
-        { from: 'successful', to: 'complete' },
+        // { from: 'failed', to: 'complete' },
+        // { from: 'successful', to: 'complete' },
         { from: 'pending', to: 'cancelled' },
         { from: 'in-progress', to: 'cancelled' }
       ]);
@@ -1465,6 +1466,7 @@
       if (options.argsFn) this.argsFn = options.argsFn;
       if (options.onFail) this.onFail = options.onFail;
       if (options.onSuccess) this.onSuccess = options.onSuccess;
+      if (options.skipIf) this.skipIf = options.skipIf;
 
       this.scope = new Proxy({}, {
         get: (target, prop) => {
@@ -1498,7 +1500,17 @@
       _args.set(this, val);
     }
 
-    process () {
+    async process (...args) {
+      if (this.skipIf) {
+        for (const node of this) {
+          node.setState('skipped', node);
+        }
+      } else {
+        return this._process(...args)
+      }
+    }
+
+    _process () {
       throw new Error('not implemented')
     }
 
@@ -1640,7 +1652,7 @@
       }
     }
 
-    async process () {
+    async _process () {
       const output = [];
       for await (const result of this) {
         output.push(result);
@@ -1833,7 +1845,7 @@
       this.type = 'job';
     }
 
-    async process (...processArgs) {
+    async _process (...processArgs) {
       try {
         this.setState('in-progress', this);
         const args = this._getArgs(processArgs);
@@ -1881,7 +1893,7 @@
       this.Node = options.Node;
     }
 
-    async process (...fnArgs) {
+    async _process (...fnArgs) {
       if (this.for) {
         const { var: varName, of: iterable } = this.for();
         for (const i of iterable) {
@@ -1900,7 +1912,7 @@
           node.args = node.args || args;
         }
       }
-      return super.process()
+      return super._process()
     }
   }
 

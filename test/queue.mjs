@@ -276,10 +276,6 @@ tom.todo('break', async function () {
   /* queued item can set `.break` to cancel further processing of queue */
 })
 
-tom.todo('condition', async function () {
-  /* only process queue if `.condition` is truthy, e.g. `condition: user.npm` */
-})
-
 tom.todo('queue jobs are called with queue.args', async function () {
   /* an onFail queue is called with err in the args, this must be passed to child jobs */
 })

@@ -27,4 +27,14 @@ tom.test('scope level 2', async function () {
   a.equal(two.scope.value, 1)
 })
 
+tom.test('skipIf', async function () {
+  const actuals = []
+  const one = new Node({
+    fn: () => actuals.push('ok'),
+    skipIf: true
+  })
+  await one.process()
+  a.deepEqual(actuals, [])
+})
+
 export default tom
