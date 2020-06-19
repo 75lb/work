@@ -247,7 +247,7 @@ tom.test('addService: named and default', async function () {
   a.ok(!planner.services.service1.job2)
 })
 
-tom.test('loop', async function () {
+tom.test('loop: simple job', async function () {
   const actuals = []
   const ctx = {
     items: [1, 2, 3],
@@ -259,7 +259,7 @@ tom.test('loop', async function () {
   })
   const result = planner.toModel({
     type: 'loop',
-    forEach: 'items',
+    for: { var: 'n', of: 'items' },
     node: {
       type: 'job',
       invoke: 'job1'
@@ -269,6 +269,32 @@ tom.test('loop', async function () {
   await result.process()
   // this.data = actuals
   a.deepEqual(actuals, [1, 2, 3])
+})
+
+tom.test('loop: job with scope args', async function () {
+  const actuals = []
+  const ctx = {
+    items: [1],
+    args: n => n
+  }
+  const planner = new Planner(ctx)
+  planner.addService({
+    job1: n => actuals.push(n)
+  })
+  const result = planner.toModel({
+    type: 'loop',
+    for: { var: 'n', of: 'items' },
+    scope: { one: 'A' },
+    node: {
+      type: 'job',
+      invoke: 'job1',
+      args: ['•one']
+    },
+    argsFn: 'args'
+  })
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, ['A'])
 })
 
 tom.test('loop: complex', async function () {
@@ -309,7 +335,7 @@ tom.test('loop: complex', async function () {
           type: 'job',
           service: 'cache',
           invoke: 'fetch',
-          args: ['75lb', "contributionsPerOrg:${scope.get('org').id}"],
+          args: ['75lb', "contributionsPerOrg:•{org.id}"],
           onFail: {
             type: 'queue',
             name: 'refresh',
@@ -324,7 +350,7 @@ tom.test('loop: complex', async function () {
                 type: 'job',
                 service: 'cache',
                 invoke: 'update',
-                args: ['75lb', "contributionsPerOrg:${scope.get('org').id}"]
+                args: ['75lb', "contributionsPerOrg:•{org.id}"]
               }
             ]
           }
@@ -351,7 +377,7 @@ tom.test('loop: complex', async function () {
   ])
 })
 
-tom.test('scope access in args', async function () {
+tom.test('scope access in args, template access', async function () {
   const actuals = []
   const planner = new Planner()
   planner.addService({
@@ -360,12 +386,85 @@ tom.test('scope access in args', async function () {
   const result = planner.toModel({
     type: 'job',
     invoke: 'job1',
-    args: ['${scope.get("two")}', '•two']
+    args: ['•{two}']
   })
-  result.scope.set('two', 2)
+  result.scope.two = 2
   await result.process()
   // this.data = actuals
-  a.deepEqual(actuals, ['2', 2])
+  a.deepEqual(actuals, ['2'])
+})
+
+tom.test('scope access in args, dot syntax', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    job1: (...args) => { actuals.push(...args) }
+  })
+  const result = planner.toModel({
+    type: 'job',
+    invoke: 'job1',
+    args: ['•two']
+  })
+  result.scope.two = 2
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [2])
+})
+
+tom.test('scope access in args, dot syntax, deep', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    job1: (...args) => { actuals.push(...args) }
+  })
+  const result = planner.toModel({
+    type: 'job',
+    invoke: 'job1',
+    args: ['•obj.two[0]']
+  })
+  result.scope.obj = { two: [2] }
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [2])
+})
+
+tom.test('scope access in args, dot syntax, deep, embedded', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    job1: (...args) => { actuals.push(...args) }
+  })
+  const result = planner.toModel({
+    type: 'job',
+    invoke: 'job1',
+    args: ['prefix: •{obj.two[0]}']
+  })
+  result.scope.obj = { two: [2] }
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, ['prefix: 2'])
+})
+
+tom.test('scope access in args, dot syntax, deep, string-embedded, nested', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    job1: (...args) => { actuals.push(...args) }
+  })
+  const result = planner.toModel({
+    type: 'queue',
+    queue: [
+      {
+        type: 'job',
+        invoke: 'job1',
+        args: ['prefix: •{obj.two[0]}']
+      }
+    ]
+  })
+  result.scope.obj = { two: [2] }
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, ['prefix: 2'])
 })
 
 export default tom

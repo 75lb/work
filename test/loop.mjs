@@ -5,28 +5,34 @@ const a = assert.strict
 
 const tom = new TestRunner.Tom()
 
-tom.test('loop: forEach', async function () {
+tom.test('loop: for 1', async function () {
   const actuals = []
   const loop = new Loop()
-  loop.forEach = () => [1, 2, 3]
+  loop.for = () => ({ var: 'n', of: [1, 2, 3] })
+  loop.scope.n = 'root'
   loop.Node = class LoopJob extends Job {
-    fn (a, b) {
-      actuals.push(a, b)
+    constructor (options) {
+      super(options)
+      this.args = [`arg: •{n}`]
+    }
+    fn (a) {
+      actuals.push(a)
     }
   }
-  loop.argsFn = i => [i, `arg: ${i}`]
+  loop.args = [`arg: •{n}`]
   await loop.process()
-  a.deepEqual(actuals, [1, 'arg: 1', 2, 'arg: 2', 3, 'arg: 3'])
+  a.deepEqual(actuals, ['arg: 1', 'arg: 2', 'arg: 3'])
+  a.equal(loop.args[0], 'arg: root')
 })
 
-tom.test('loop: for', async function () {
+tom.test('loop: for, argsFn', async function () {
   const actuals = []
   const loop = new Loop()
   loop.for = () => ({ var: 'n', of: [1, 2, 3] })
   loop.Node = class LoopJob extends Job {
     constructor (options) {
       super(options)
-      this.argsFn = function () { return [this.scope.get('n')] }
+      this.argsFn = function () { return [this.scope.n] }
     }
     fn (n) {
       actuals.push(n)

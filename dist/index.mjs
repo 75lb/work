@@ -506,173 +506,6 @@ function createMixin (Src) {
   }
 }
 
-class Node extends createMixin(Composite)(StateMachine) {
-  constructor (options = {}) {
-    super('pending', [
-      { from: 'pending', to: 'in-progress' },
-      { from: 'in-progress', to: 'failed' },
-      { from: 'in-progress', to: 'successful' },
-      { from: 'failed', to: 'complete' },
-      { from: 'successful', to: 'complete' },
-      { from: 'pending', to: 'cancelled' },
-      { from: 'in-progress', to: 'cancelled' }
-    ]);
-    this.name = options.name;
-    if (options.args) this.args = options.args;
-    if (options.argsFn) this.argsFn = options.argsFn;
-    if (options.onFail) this.onFail = options.onFail;
-    if (options.onSuccess) this.onSuccess = options.onSuccess;
-
-    this.scope = new Scope(null, this);
-    for (const prop in options.scope) {
-      this.scope.set(prop, options.scope[prop]);
-    }
-  }
-
-  process () {
-    throw new Error('not implemented')
-  }
-
-  toString () {
-    return `${this.name || this.invoke || this.fn.name}: ${this.state}`.replace(/^bound /, '')
-  }
-
-  tree () {
-    return Array.from(this).reduce((prev, curr) => {
-      const indent = '  '.repeat(curr.level());
-      const line = `${indent}- ${curr}\n`;
-      return (prev += line)
-    }, '')
-  }
-
-  _getArgs (fnArgs, argsFnArg) {
-    return fnArgs.length
-      ? fnArgs
-      : this.argsFn
-        ? arrayify(this.argsFn(argsFnArg))
-        : arrayify(this.args)
-  }
-}
-
-class Scope extends Map {
-  constructor (iterable, node) {
-    super(iterable);
-    this.node = node;
-  }
-
-  get (key) {
-    if (this.has(key)) {
-      return super.get(key)
-    } else if (this.node && this.node.parent) {
-      return this.node.parent.scope.get(key)
-    }
-  }
-}
-
-const _maxConcurrency = new WeakMap();
-
-class Queue extends Node {
-  /**
-   * @param {object} options
-   * @param {function[]} options.jobs - An array of functions, each of which must return a Promise.
-   * @param {number} options.maxConcurrency
-   * @emits job-start
-   * @emits job-end
-   */
-  constructor (options) {
-    super(options);
-    options = Object.assign({
-      jobs: [],
-      maxConcurrency: 1
-    }, options);
-    this.jobStats = {
-      total: 0,
-      complete: 0,
-      active: 0
-    };
-    this.id = (Math.random() * 10e18).toString(16);
-    this.maxConcurrency = options.maxConcurrency;
-    this.type = 'queue';
-    for (const job of options.jobs) {
-      this.add(job);
-    }
-  }
-
-  get maxConcurrency () {
-    return _maxConcurrency.get(this)
-  }
-
-  set maxConcurrency (val) {
-    if (!Number.isInteger(val)) {
-      throw new Error('You must supply an integer to queue.maxConcurrency')
-    }
-    _maxConcurrency.set(this, val);
-  }
-
-  add (job) {
-    super.add(job);
-    this.jobStats.total++;
-    this.emit('add', job);
-  }
-
-  /**
-   * Iterate over `jobs` invoking no more than `maxConcurrency` at once. Yield results on receipt.
-   */
-  async * [Symbol.asyncIterator] () {
-    this.setState('in-progress', this);
-    const jobs = this.children.slice();
-    try {
-      while (jobs.length) {
-        const slotsAvailable = this.maxConcurrency - this.jobStats.active;
-        if (slotsAvailable > 0) {
-          const toRun = [];
-          for (let i = 0; i < slotsAvailable; i++) {
-            const job = jobs.shift();
-            if (job) {
-              this.jobStats.active++;
-              const jobPromise = job.process()
-                .then(result => {
-                  this.jobStats.active -= 1;
-                  this.jobStats.complete += 1;
-                  return result
-                });
-              toRun.push(jobPromise);
-            }
-          }
-          const completedJobs = await Promise.all(toRun);
-          for (const job of completedJobs) {
-            yield job;
-          }
-        }
-      }
-      if (this.onSuccess) {
-        this.add(this.onSuccess);
-        await this.onSuccess.process();
-      }
-      this.setState('successful', this);
-    } catch (err) {
-      this.setState('failed', this);
-      if (this.onFail) {
-        if (!(this.onFail.args && this.onFail.args.length)) {
-          this.onFail.args = [err, this];
-        }
-        this.add(this.onFail);
-        await this.onFail.process();
-      } else {
-        throw err
-      }
-    }
-  }
-
-  async process () {
-    const output = [];
-    for await (const result of this) {
-      output.push(result);
-    }
-    return output
-  }
-}
-
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 /**
@@ -794,7 +627,7 @@ var Symbol$1 = root.Symbol,
     splice = arrayProto.splice;
 
 /* Built-in method references that are verified to be native. */
-var Map$1 = getNative(root, 'Map'),
+var Map = getNative(root, 'Map'),
     nativeCreate = getNative(Object, 'create');
 
 /** Used to convert symbols to primitives and strings. */
@@ -1039,7 +872,7 @@ function MapCache(entries) {
 function mapCacheClear() {
   this.__data__ = {
     'hash': new Hash,
-    'map': new (Map$1 || ListCache),
+    'map': new (Map || ListCache),
     'string': new Hash
   };
 }
@@ -1607,6 +1440,209 @@ function get(object, path, defaultValue) {
 
 var lodash_get = get;
 
+const _name = new WeakMap();
+const _args = new WeakMap();
+
+class Node extends createMixin(Composite)(StateMachine) {
+  constructor (options = {}) {
+    super('pending', [
+      { from: 'pending', to: 'in-progress' },
+      { from: 'in-progress', to: 'failed' },
+      { from: 'in-progress', to: 'successful' },
+      { from: 'failed', to: 'complete' },
+      { from: 'successful', to: 'complete' },
+      { from: 'pending', to: 'cancelled' },
+      { from: 'in-progress', to: 'cancelled' }
+    ]);
+    this.name = options.name;
+    this.args = options.args;
+    if (options.argsFn) this.argsFn = options.argsFn;
+    if (options.onFail) this.onFail = options.onFail;
+    if (options.onSuccess) this.onSuccess = options.onSuccess;
+
+    this.scope = new Proxy({}, {
+      get: (target, prop) => {
+        if (prop in target) {
+          return Reflect.get(target, prop)
+        } else if (this.parent) {
+          return Reflect.get(this.parent.scope, prop)
+        }
+      },
+      set: function (target, prop, value) {
+        return Reflect.set(target, prop, value)
+      }
+    });
+    Object.assign(this.scope, options.scope);
+  }
+
+  get name () {
+    return this._replaceScopeToken(_name.get(this))
+  }
+  set name (val) {
+    _name.set(this, val);
+  }
+
+  get args () {
+    const args = _args.get(this);
+    return Array.isArray(args) && args.length
+      ? args.map(arg => this._replaceScopeToken(arg))
+      : args
+  }
+  set args (val) {
+    _args.set(this, val);
+  }
+
+  process () {
+    throw new Error('not implemented')
+  }
+
+  toString () {
+    return `${this.name || this.invoke || this.fn.name}: ${this.state}`.replace(/^bound /, '')
+  }
+
+  tree () {
+    return Array.from(this).reduce((prev, curr) => {
+      const indent = '  '.repeat(curr.level());
+      const line = `${indent}- ${curr}\n`;
+      return (prev += line)
+    }, '')
+  }
+
+  /**
+   * Return process, argsFn or args.
+   */
+  _getArgs (processArgs, argsFnArg) {
+    return processArgs.length
+      ? processArgs
+      : this.argsFn
+        ? arrayify(this.argsFn(argsFnArg))
+        : arrayify(this.args)
+  }
+
+  _replaceScopeToken (str) {
+    if (typeof str === 'string' && str) {
+      if (/^•[a-zA-Z]/.test(str)) {
+        return lodash_get(this.scope, str.replace('•',''))
+      } else if (/•{.*}/.test(str)) {
+        str = str.replace('•{', '${scope.');
+        const fn = new Function('scope', `return \`${str}\``);
+        return fn(this.scope)
+      } else if (/\${.*}/.test(str)) {
+        const fn = new Function('scope', `return \`${str}\``);
+        return fn(this.scope)
+      } else {
+        return str
+      }
+    } else {
+      return str
+    }
+  }
+}
+
+const _maxConcurrency = new WeakMap();
+
+class Queue extends Node {
+  /**
+   * @param {object} options
+   * @param {function[]} options.jobs - An array of functions, each of which must return a Promise.
+   * @param {number} options.maxConcurrency
+   * @emits job-start
+   * @emits job-end
+   */
+  constructor (options) {
+    super(options);
+    options = Object.assign({
+      jobs: [],
+      maxConcurrency: 1
+    }, options);
+    this.jobStats = {
+      total: 0,
+      complete: 0,
+      active: 0
+    };
+    this.id = (Math.random() * 10e18).toString(16);
+    this.maxConcurrency = options.maxConcurrency;
+    this.type = 'queue';
+    for (const job of options.jobs) {
+      this.add(job);
+    }
+  }
+
+  get maxConcurrency () {
+    return _maxConcurrency.get(this)
+  }
+
+  set maxConcurrency (val) {
+    if (!Number.isInteger(val)) {
+      throw new Error('You must supply an integer to queue.maxConcurrency')
+    }
+    _maxConcurrency.set(this, val);
+  }
+
+  add (job) {
+    super.add(job);
+    this.jobStats.total++;
+    this.emit('add', job);
+  }
+
+  /**
+   * Iterate over `jobs` invoking no more than `maxConcurrency` at once. Yield results on receipt.
+   */
+  async * [Symbol.asyncIterator] () {
+    this.setState('in-progress', this);
+    const jobs = this.children.slice();
+    try {
+      while (jobs.length) {
+        const slotsAvailable = this.maxConcurrency - this.jobStats.active;
+        if (slotsAvailable > 0) {
+          const toRun = [];
+          for (let i = 0; i < slotsAvailable; i++) {
+            const job = jobs.shift();
+            if (job) {
+              this.jobStats.active++;
+              const jobPromise = job.process()
+                .then(result => {
+                  this.jobStats.active -= 1;
+                  this.jobStats.complete += 1;
+                  return result
+                });
+              toRun.push(jobPromise);
+            }
+          }
+          const completedJobs = await Promise.all(toRun);
+          for (const job of completedJobs) {
+            yield job;
+          }
+        }
+      }
+      if (this.onSuccess) {
+        this.add(this.onSuccess);
+        await this.onSuccess.process();
+      }
+      this.setState('successful', this);
+    } catch (err) {
+      this.setState('failed', this);
+      if (this.onFail) {
+        if (!(this.onFail.args && this.onFail.args.length)) {
+          this.onFail.args = [err, this];
+        }
+        this.add(this.onFail);
+        await this.onFail.process();
+      } else {
+        throw err
+      }
+    }
+  }
+
+  async process () {
+    const output = [];
+    for await (const result of this) {
+      output.push(result);
+    }
+    return output
+  }
+}
+
 class Planner {
   constructor (ctx) {
     this.services = { default: {} };
@@ -1641,7 +1677,7 @@ class Planner {
       const fn = this._getServiceFunction(plan);
       return class LoopJob extends Job {
         constructor (options) {
-          super(options);
+          super(plan);
           if (plan.onFail) {
             this.onFail = planner.toModel(plan.onFail);
           }
@@ -1674,20 +1710,11 @@ class Planner {
         plan.onFail = this.toModel(plan.onFail);
       }
       plan.fn = this._getServiceFunction(plan);
-      if (plan.args) {
-        plan.argsFn = function () {
-          return arrayify(plan.args).map(arg => {
-            if (/^•[a-z]/.test(arg)) {
-              return this.scope.get(arg.replace('•',''))
-            } else if (/\${.*}/.test(arg)) {
-              const fn = new Function('scope', `return \`${arg}\``);
-              return fn(this.scope)
-            } else {
-              return arg
-            }
-          })
-        };
-      }
+      // if (plan.args) {
+      //   plan.argsFn = function () {
+      //     return arrayify(plan.args).map(arg => this._replaceScopeToken(arg))
+      //   }
+      // }
       return new Job(plan)
     } else if (plan.type === 'job' && plan.fn) {
       if (plan.onFail) {
@@ -1718,10 +1745,8 @@ class Planner {
       }
       return queue
     } else if (plan.type === 'loop') {
-      const loop = new Loop();
-      if (plan.forEach) {
-        loop.forEach = () => this.ctx[plan.forEach];
-      } else if (plan.for) {
+      const loop = new Loop(plan);
+      if (plan.for) {
         loop.for = () => {
           const ofFn = lodash_get(this.ctx, plan.for.of);
           if (!ofFn) {
@@ -1772,11 +1797,11 @@ class Work extends Emitter {
   createContext () {
     const work = this;
     const ctx = new Proxy({}, {
-      get: function (target, prop, receiver) {
+      get: function (target, prop) {
         work.emit('ctx-read', prop, target[prop]);
         return Reflect.get(...arguments)
       },
-      set: function (target, prop, value, receiver) {
+      set: function (target, prop, value) {
         work.emit('ctx-write', prop, value);
         return Reflect.set(...arguments)
       }
@@ -1798,14 +1823,14 @@ class Job extends Node {
        */
       this.result = options.result;
     }
-    this.id = (Math.random() * 10e18).toString(16);
+    this.id = (Math.random() * 10e20).toString(16);
     this.type = 'job';
   }
 
-  async process (...fnArgs) {
+  async process (...processArgs) {
     try {
       this.setState('in-progress', this);
-      const args = this._getArgs(fnArgs);
+      const args = this._getArgs(processArgs);
       const result = await this.fn(...args);
       if (this.result) {
         this.scope.set(this.result, result);
@@ -1843,7 +1868,6 @@ class Loop extends Queue {
   constructor (options = {}) {
     super(options);
     this.type = 'loop';
-    this.forEach = options.forEach;
     this.for = options.for;
     /**
      * A new instance will be created on each iteration.
@@ -1852,26 +1876,24 @@ class Loop extends Queue {
   }
 
   async process (...fnArgs) {
-    /* build queue children */
     if (this.for) {
       const { var: varName, of: iterable } = this.for();
       for (const i of iterable) {
         const node = new this.Node();
-        node.scope.set(varName, i);
+        this.add(node);
+        node.scope[varName] = i;
         const args = this._getArgs(fnArgs, i);
         node.args = node.args || args;
-        this.add(node);
       }
     } else if (this.forEach) {
       const iterable = this.forEach();
       for (const i of iterable) {
         const node = new this.Node();
+        this.add(node);
         const args = this._getArgs(fnArgs, i);
         node.args = node.args || args;
-        this.add(node);
       }
     }
-    /* process queue */
     return super.process()
   }
 }

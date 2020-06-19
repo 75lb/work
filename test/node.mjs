@@ -9,22 +9,22 @@ tom.test('scope', async function () {
   const node = new Node({
     scope: { value: 'a' }
   })
-  a.equal(node.scope.get('value'), 'a')
+  a.equal(node.scope.value, 'a')
 })
 
 tom.test('scope level 2', async function () {
-  const one = new Node({
+  const root = new Node({
     scope: { value: 1 }
   })
-  const two = new Node({
+  const one = new Node({
     scope: { value: 2 }
   })
-  const three = new Node()
-  one.add(two)
-  one.add(three)
-  a.equal(one.scope.get('value'), 1)
-  a.equal(two.scope.get('value'), 2)
-  a.equal(three.scope.get('value'), 1)
+  const two = new Node()
+  root.add(one)
+  root.add(two)
+  a.equal(root.scope.value, 1)
+  a.equal(one.scope.value, 2)
+  a.equal(two.scope.value, 1)
 })
 
 export default tom

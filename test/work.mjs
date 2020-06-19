@@ -235,7 +235,7 @@ tom.test('scope', async function () {
   const actuals = []
   const job = new Job({
     fn: function () {
-      actuals.push(this.scope.get('value'))
+      actuals.push(this.scope.value)
     },
     scope: {
       value: 'a'
@@ -250,7 +250,7 @@ tom.test('scope, level 2', async function () {
   const queue = new Queue({ scope: { value: 'a' } })
   queue.add(new Job({
     fn: function () {
-      actuals.push(this.scope.get('value'))
+      actuals.push(this.scope.value)
     },
     scope: {
       value: 'b'
@@ -258,7 +258,7 @@ tom.test('scope, level 2', async function () {
   }))
   queue.add(new Job({
     fn: function () {
-      actuals.push(this.scope.get('value'))
+      actuals.push(this.scope.value)
     },
     scope: {}
   }))
@@ -299,7 +299,7 @@ tom.test('complex model', async function () {
       this.add(new Job({
         fn: cache.fetch.bind(cache),
         argsFn: function () {
-          return ['75lb', `perOrg:${this.scope.get('org')}`]
+          return ['75lb', `perOrg:${this.scope.org}`]
         },
         onFail: new Queue({
           name: 'refresh',
@@ -311,7 +311,7 @@ tom.test('complex model', async function () {
             new Job({
               fn: cache.update.bind(cache),
               argsFn: function () {
-                return ['75lb', `perOrg:${this.scope.get('org')}`]
+                return ['75lb', `perOrg:${this.scope.org}`]
               }
             })
           ]
