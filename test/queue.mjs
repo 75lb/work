@@ -46,7 +46,6 @@ tom.test('.process(): events', async function () {
   })
 
   await queue.process()
-  // this.data = actuals
   a.deepEqual(actuals, [
     [
       'queue1',
@@ -188,7 +187,6 @@ tom.test('onFail', async function () {
   }))
   queue.onFail = new Job({ fn: () => { actuals.push(1) } })
   await queue.process()
-  // this.data = actuals
   a.deepEqual(actuals, [1])
 })
 
@@ -204,7 +202,6 @@ tom.test('onFail cancels processing of queue', async function () {
     onFail: new Job({ fn: err => actuals.push(1) })
   })
   await queue.process()
-  // this.data = actuals
   a.deepEqual(actuals, [1])
 })
 
@@ -225,7 +222,6 @@ tom.test('job.onFail job completes before queue moves on', async function () {
     ]
   })
   await queue.process()
-  // this.data = actuals
   a.deepEqual(actuals, ['broken', 3])
 })
 
@@ -256,7 +252,6 @@ tom.test('job.onFail queue completes before queue moves on', async function () {
     ]
   })
   await queue.process()
-  // this.data = actuals
   a.deepEqual(actuals, ['onFail', 'onFail2', 3])
 })
 
@@ -268,7 +263,6 @@ tom.test('onSuccess', async function () {
   }))
   queue.onSuccess = new Job({ fn: () => { actuals.push(2) } })
   await queue.process()
-  // this.data = actuals
   a.deepEqual(actuals, [1, 2])
 })
 

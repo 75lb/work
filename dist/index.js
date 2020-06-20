@@ -1880,19 +1880,11 @@
 
     async _process (...fnArgs) {
       if (this.for) {
-        const { var: varName, of: iterable } = this.for();
+        const { var: varName, of: iterable } = await this.for();
         for (const i of iterable) {
           const node = new this.Node();
           this.add(node);
           node.scope[varName] = i;
-          const args = this._getArgs(fnArgs, i);
-          node.args = node.args || args;
-        }
-      } else if (this.forEach) {
-        const iterable = this.forEach();
-        for (const i of iterable) {
-          const node = new this.Node();
-          this.add(node);
           const args = this._getArgs(fnArgs, i);
           node.args = node.args || args;
         }
