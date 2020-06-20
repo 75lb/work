@@ -136,7 +136,7 @@ tom.test('.process(): maxConcurrency 3, job finish order correct', async functio
       actuals.push(1.2)
     }
   }))
-  const results = await queue.process()
+  await queue.process()
   a.deepEqual(actuals, [1.1, 1, 1.2])
 })
 
@@ -222,11 +222,11 @@ tom.test('job.onFail job completes before queue moves on', async function () {
         })
       }),
       new Job({ fn: () => { actuals.push(3) } })
-    ],
+    ]
   })
   await queue.process()
   // this.data = actuals
-  a.deepEqual(actuals, [ 'broken', 3 ])
+  a.deepEqual(actuals, ['broken', 3])
 })
 
 tom.test('job.onFail queue completes before queue moves on', async function () {
@@ -253,7 +253,7 @@ tom.test('job.onFail queue completes before queue moves on', async function () {
         })
       }),
       new Job({ fn: () => { actuals.push(3) } })
-    ],
+    ]
   })
   await queue.process()
   // this.data = actuals
@@ -269,7 +269,7 @@ tom.test('onSuccess', async function () {
   queue.onSuccess = new Job({ fn: () => { actuals.push(2) } })
   await queue.process()
   // this.data = actuals
-  a.deepEqual(actuals, [1,2])
+  a.deepEqual(actuals, [1, 2])
 })
 
 tom.todo('break', async function () {

@@ -1,7 +1,6 @@
 import TestRunner from 'test-runner'
-import { Work, Job, Queue, Planner, Loop } from '../index.mjs'
+import { Work, Job, Queue, Loop } from '../index.mjs'
 import assert from 'assert'
-import sleep from 'sleep-anywhere'
 
 const a = assert.strict
 const tom = new TestRunner.Tom()

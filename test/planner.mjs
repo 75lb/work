@@ -1,7 +1,6 @@
 import TestRunner from 'test-runner'
-import { Planner, Job } from '../index.mjs'
+import { Planner } from '../index.mjs'
 import assert from 'assert'
-import sleep from 'sleep-anywhere/index.mjs'
 
 const a = assert.strict
 const tom = new TestRunner.Tom()
@@ -9,8 +8,8 @@ const tom = new TestRunner.Tom()
 tom.test('toModel(job): invoke', async function () {
   const planner = new Planner()
   planner.addService({
-    job1: n => { actuals.push(n) },
-    job2: n => { actuals.push(n) }
+    job1: function () {},
+    job2: function () {}
   })
   const result = planner.toModel({
     type: 'job',
@@ -27,8 +26,8 @@ tom.test('toModel(job): invoke', async function () {
 
 tom.test('toModel(job): fn', async function () {
   const planner = new Planner()
-  const job1 = n => { actuals.push(n) }
-  const job2 = n => { actuals.push(n) }
+  const job1 = function () {}
+  const job2 = function () {}
   const result = planner.toModel({
     type: 'job',
     fn: job1,
@@ -44,9 +43,9 @@ tom.test('toModel(job): fn', async function () {
 
 tom.test('toModel(job): fn, invoke', async function () {
   const planner = new Planner()
-  const job1 = n => { actuals.push(n) }
+  const job1 = function () {}
   planner.addService({
-    job2: n => { actuals.push(n) }
+    job2: function () {}
   })
   const result = planner.toModel({
     type: 'job',
@@ -335,7 +334,7 @@ tom.test('loop: complex', async function () {
           type: 'job',
           service: 'cache',
           invoke: 'fetch',
-          args: ['75lb', "contributionsPerOrg:•{org.id}"],
+          args: ['75lb', 'contributionsPerOrg:•{org.id}'],
           onFail: {
             type: 'queue',
             name: 'refresh',
@@ -350,7 +349,7 @@ tom.test('loop: complex', async function () {
                 type: 'job',
                 service: 'cache',
                 invoke: 'update',
-                args: ['75lb', "contributionsPerOrg:•{org.id}"]
+                args: ['75lb', 'contributionsPerOrg:•{org.id}']
               }
             ]
           }
@@ -366,14 +365,14 @@ tom.test('loop: complex', async function () {
   await result.process()
   // this.data = actuals
   a.deepEqual(actuals, [
-    [ 'fetch', '75lb', 'contributionsPerOrg:1' ],
-    [ 'collect', '75lb' ],
-    [ 'update', '75lb', 'contributionsPerOrg:1' ],
-    [ 'display' ],
-    [ 'fetch', '75lb', 'contributionsPerOrg:2' ],
-    [ 'collect', '75lb' ],
-    [ 'update', '75lb', 'contributionsPerOrg:2' ],
-    [ 'display' ]
+    ['fetch', '75lb', 'contributionsPerOrg:1'],
+    ['collect', '75lb'],
+    ['update', '75lb', 'contributionsPerOrg:1'],
+    ['display'],
+    ['fetch', '75lb', 'contributionsPerOrg:2'],
+    ['collect', '75lb'],
+    ['update', '75lb', 'contributionsPerOrg:2'],
+    ['display']
   ])
 })
 

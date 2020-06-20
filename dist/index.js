@@ -1484,6 +1484,7 @@
     get name () {
       return this._replaceScopeToken(_name.get(this))
     }
+
     set name (val) {
       _name.set(this, val);
     }
@@ -1494,6 +1495,7 @@
         ? args.map(arg => this._replaceScopeToken(arg))
         : args
     }
+
     set args (val) {
       _args.set(this, val);
     }
@@ -1507,7 +1509,6 @@
         try {
           this.setState('in-progress', this);
           const result = await this._process(...args);
-          this.setState('successful', this);
           if (this.onSuccess) {
             if (!(this.onSuccess.args && this.onSuccess.args.length)) {
               this.onSuccess.args = [result, this];
@@ -1515,6 +1516,7 @@
             this.add(this.onSuccess);
             await this.onSuccess.process();
           }
+          this.setState('successful', this);
           return result
         } catch (err) {
           this.setState('failed', this);
@@ -1561,7 +1563,7 @@
     _replaceScopeToken (str) {
       if (typeof str === 'string' && str) {
         if (/^•[a-zA-Z]/.test(str)) {
-          return lodash_get(this.scope, str.replace('•',''))
+          return lodash_get(this.scope, str.replace('•', ''))
         } else if (/•{.*}/.test(str)) {
           str = str.replace('•{', '${scope.');
           const fn = new Function('scope', `return \`${str}\``);

@@ -37,4 +37,83 @@ tom.test('skipIf', async function () {
   a.deepEqual(actuals, [])
 })
 
+tom.test('onSuccess called', async function () {
+  const actuals = []
+
+  class Root extends Node {
+    _process () {
+      actuals.push(this.constructor.name)
+    }
+  }
+  class Success extends Node {
+    _process () {
+      actuals.push(this.constructor.name)
+    }
+  }
+
+  const onSuccess = new Success()
+  const root = new Root({ onSuccess })
+
+  await root.process()
+  a.deepEqual(actuals, ['Root', 'Success'])
+  a.equal(root.state, 'successful')
+  a.equal(onSuccess.state, 'successful')
+})
+
+tom.test('onSuccess not called', async function () {
+  const actuals = []
+
+  class Root extends Node {
+    _process () {
+      actuals.push(this.constructor.name)
+      throw new Error('broken')
+    }
+  }
+  class Success extends Node {
+    _process () {
+      actuals.push(this.constructor.name)
+    }
+  }
+
+  const onSuccess = new Success()
+  const root = new Root({ onSuccess })
+
+  await a.rejects(
+    async () => await root.process(),
+    /broken/
+  )
+
+  a.deepEqual(actuals, ['Root'])
+  a.equal(root.state, 'failed')
+  a.equal(onSuccess.state, 'pending')
+})
+
+tom.test('onSuccess fails', async function () {
+  const actuals = []
+
+  class Root extends Node {
+    _process () {
+      actuals.push(this.constructor.name)
+    }
+  }
+  class Success extends Node {
+    _process () {
+      actuals.push(this.constructor.name)
+      throw new Error('broken')
+    }
+  }
+
+  const onSuccess = new Success()
+  const root = new Root({ onSuccess })
+
+  await a.rejects(
+    async () => await root.process(),
+    /broken/
+  )
+
+  a.deepEqual(actuals, ['Root', 'Success'])
+  a.equal(root.state, 'failed')
+  a.equal(onSuccess.state, 'failed')
+})
+
 export default tom

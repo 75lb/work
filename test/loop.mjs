@@ -13,13 +13,14 @@ tom.test('loop: for 1', async function () {
   loop.Node = class LoopJob extends Job {
     constructor (options) {
       super(options)
-      this.args = [`arg: •{n}`]
+      this.args = ['arg: •{n}']
     }
+
     fn (a) {
       actuals.push(a)
     }
   }
-  loop.args = [`arg: •{n}`]
+  loop.args = ['arg: •{n}']
   await loop.process()
   a.deepEqual(actuals, ['arg: 1', 'arg: 2', 'arg: 3'])
   a.equal(loop.args[0], 'arg: root')
@@ -34,6 +35,7 @@ tom.test('loop: for, argsFn', async function () {
       super(options)
       this.argsFn = function () { return [this.scope.n] }
     }
+
     fn (n) {
       actuals.push(n)
     }
