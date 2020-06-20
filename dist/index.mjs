@@ -1450,8 +1450,6 @@ class Node extends createMixin(Composite)(StateMachine) {
       { from: 'pending', to: 'skipped' },
       { from: 'in-progress', to: 'failed' },
       { from: 'in-progress', to: 'successful' },
-      // { from: 'failed', to: 'complete' },
-      // { from: 'successful', to: 'complete' },
       { from: 'pending', to: 'cancelled' },
       { from: 'in-progress', to: 'cancelled' }
     ]);
@@ -1500,7 +1498,30 @@ class Node extends createMixin(Composite)(StateMachine) {
         node.setState('skipped', node);
       }
     } else {
-      return this._process(...args)
+      try {
+        this.setState('in-progress', this);
+        const result = await this._process(...args);
+        this.setState('successful', this);
+        if (this.onSuccess) {
+          if (!(this.onSuccess.args && this.onSuccess.args.length)) {
+            this.onSuccess.args = [result, this];
+          }
+          this.add(this.onSuccess);
+          await this.onSuccess.process();
+        }
+        return result
+      } catch (err) {
+        this.setState('failed', this);
+        if (this.onFail) {
+          if (!(this.onFail.args && this.onFail.args.length)) {
+            this.onFail.args = [err, this];
+          }
+          this.add(this.onFail);
+          await this.onFail.process();
+        } else {
+          throw err
+        }
+      }
     }
   }
 
@@ -1608,47 +1629,28 @@ class Queue extends Node {
    * Iterate over `jobs` invoking no more than `maxConcurrency` at once. Yield results on receipt.
    */
   async * [Symbol.asyncIterator] () {
-    this.setState('in-progress', this);
     const jobs = this.children.slice();
-    try {
-      while (jobs.length) {
-        const slotsAvailable = this.maxConcurrency - this.jobStats.active;
-        if (slotsAvailable > 0) {
-          const toRun = [];
-          for (let i = 0; i < slotsAvailable; i++) {
-            const job = jobs.shift();
-            if (job) {
-              this.jobStats.active++;
-              const jobPromise = job.process()
-                .then(result => {
-                  this.jobStats.active -= 1;
-                  this.jobStats.complete += 1;
-                  return result
-                });
-              toRun.push(jobPromise);
-            }
-          }
-          const completedJobs = await Promise.all(toRun);
-          for (const job of completedJobs) {
-            yield job;
+    while (jobs.length) {
+      const slotsAvailable = this.maxConcurrency - this.jobStats.active;
+      if (slotsAvailable > 0) {
+        const toRun = [];
+        for (let i = 0; i < slotsAvailable; i++) {
+          const job = jobs.shift();
+          if (job) {
+            this.jobStats.active++;
+            const jobPromise = job.process()
+              .then(result => {
+                this.jobStats.active -= 1;
+                this.jobStats.complete += 1;
+                return result
+              });
+            toRun.push(jobPromise);
           }
         }
-      }
-      if (this.onSuccess) {
-        this.add(this.onSuccess);
-        await this.onSuccess.process();
-      }
-      this.setState('successful', this);
-    } catch (err) {
-      this.setState('failed', this);
-      if (this.onFail) {
-        if (!(this.onFail.args && this.onFail.args.length)) {
-          this.onFail.args = [err, this];
+        const completedJobs = await Promise.all(toRun);
+        for (const job of completedJobs) {
+          yield job;
         }
-        this.add(this.onFail);
-        await this.onFail.process();
-      } else {
-        throw err
       }
     }
   }
@@ -1847,34 +1849,8 @@ class Job extends Node {
   }
 
   async _process (...processArgs) {
-    try {
-      this.setState('in-progress', this);
-      const args = this._getArgs(processArgs);
-      const result = await this.fn(...args);
-      if (this.result) {
-        this.scope.set(this.result, result);
-      }
-      this.setState('successful', this);
-      if (this.onSuccess) {
-        if (!(this.onSuccess.args && this.onSuccess.args.length)) {
-          this.onSuccess.args = [result, this];
-        }
-        this.add(this.onSuccess);
-        await this.onSuccess.process();
-      }
-      return result
-    } catch (err) {
-      this.setState('failed', this);
-      if (this.onFail) {
-        if (!(this.onFail.args && this.onFail.args.length)) {
-          this.onFail.args = [err, this];
-        }
-        this.add(this.onFail);
-        await this.onFail.process();
-      } else {
-        throw err
-      }
-    }
+    const args = this._getArgs(processArgs);
+    return this.fn(...args)
   }
 
   add (node) {
