@@ -1555,6 +1555,13 @@
         return str
       }
     }
+
+    resetState () {
+      super.resetState();
+      for (const node of this) {
+        if (node !== this) node.resetState();
+      }
+    }
   }
 
   const _maxConcurrency = new WeakMap();
