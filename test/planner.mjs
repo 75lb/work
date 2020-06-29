@@ -466,4 +466,67 @@ tom.test('scope access in args, dot syntax, deep, string-embedded, nested', asyn
   a.deepEqual(actuals, ['prefix: 2'])
 })
 
+tom.test('toModel(factory): fn', async function () {
+  const actuals = []
+  const planner = new Planner()
+  const result = planner.toModel({
+    type: 'factory',
+    fn: function () {
+      return planner.toModel({
+        type: 'job',
+        fn: () => actuals.push(1)
+      })
+    }
+  })
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [1])
+})
+
+tom.test('toModel(factory): fn, args', async function () {
+  const actuals = []
+  const planner = new Planner()
+  const result = planner.toModel({
+    type: 'factory',
+    fn: function () {
+      return planner.toModel({
+        type: 'job',
+        fn: (n) => actuals.push(n)
+      })
+    },
+    args: ['•one']
+  })
+  result.scope.one = 1
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [1])
+})
+
+tom.test('plan.result', async function () {
+  const ctx = {}
+  const planner = new Planner(ctx)
+  const result = planner.toModel({
+    type: 'job',
+    fn: () => 1,
+    result: 'one'
+  })
+
+  await result.process()
+  a.equal(ctx.one, 1)
+})
+
+tom.test('plan.result, scope', async function () {
+  const ctx = {}
+  const planner = new Planner(ctx)
+  const result = planner.toModel({
+    type: 'job',
+    scope: { n: 2 },
+    fn: () => 'test',
+    result: 'one-•{n}'
+  })
+
+  await result.process()
+  a.equal(ctx['one-2'], 'test')
+})
+
 export default tom

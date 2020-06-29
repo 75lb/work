@@ -1516,7 +1516,7 @@
             this.add(this.onSuccess);
             await this.onSuccess.process();
           }
-          this.setState('successful', this);
+          this.setState('successful', this, result);
           return result
         } catch (err) {
           this.setState('failed', this);
@@ -1733,7 +1733,9 @@
     }
 
     toModel (plan) {
-      plan = Object.assign({}, plan);
+      if (!plan._process) {
+        plan = Object.assign({}, plan);
+      }
       if (plan.type === 'job' && plan.invoke) {
         if (plan.onFail) {
           plan.onFail = this.toModel(plan.onFail);
@@ -1749,7 +1751,15 @@
         if (plan.onFail) {
           plan.onFail = this.toModel(plan.onFail);
         }
-        return new Job(plan)
+        const job = new Job(plan);
+        if (plan.result) {
+          job.on('successful', (node, result) => {
+            if (node === job) {
+              this.ctx[node._replaceScopeToken(plan.result)] = result;
+            }
+          });
+        }
+        return job
       } else if (plan.type === 'queue' && plan.queue) {
         if (plan.onFail) {
           plan.onFail = this.toModel(plan.onFail);
@@ -1791,6 +1801,23 @@
         if (plan.args) loop.args = this.ctx[plan.args];
         if (plan.argsFn) loop.argsFn = this.ctx[plan.argsFn];
         return loop
+      } else if (plan._process) {
+        /* already a model */
+        return plan
+      } else if (plan.type === 'factory') {
+        const node = plan.fn();
+        if ('args' in plan) {
+          node.args = plan.args;
+        }
+        if (plan.result) {
+          node.on('successful', (target, result) => {
+            if (target === node) {
+              console.log(target, target._replaceScopeToken(plan.result), result);
+              this.ctx[target._replaceScopeToken(plan.result)] = result;
+            }
+          });
+        }
+        return node
       } else {
         const err = new Error('invalid plan item type: ' + plan.type);
         err.plan = plan;
