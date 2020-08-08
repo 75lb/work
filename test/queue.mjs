@@ -1,5 +1,5 @@
 import TestRunner from 'test-runner'
-import { Queue, Job } from '../index.mjs'
+import { Queue, Job, Node } from '../index.mjs'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'
 const a = assert.strict
@@ -193,7 +193,8 @@ tom.test('onFail', async function () {
   queue.add(new Job({
     fn: () => { throw new Error('broken') }
   }))
-  queue.onFail = new Job({ fn: () => { actuals.push(1) } })
+  const job = new Job({ fn: () => { actuals.push(1) } })
+  queue.onFail = job
   await queue.process()
   a.deepEqual(actuals, [1])
 })

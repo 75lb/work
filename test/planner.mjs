@@ -1,6 +1,7 @@
 import TestRunner from 'test-runner'
 import { Planner } from '../index.mjs'
 import assert from 'assert'
+import sleep from '../node_modules/sleep-anywhere/index.mjs'
 
 const a = assert.strict
 const tom = new TestRunner.Tom()
@@ -515,6 +516,22 @@ tom.test('plan.result: write result to context', async function () {
   a.equal(ctx.one, 1)
 })
 
+tom.test('plan.result: invoke, write result to context', async function () {
+  const ctx = {}
+  const planner = new Planner(ctx)
+  planner.addService({
+    fn: () => 1
+  })
+  const result = planner.toModel({
+    type: 'job',
+    invoke: 'fn',
+    result: 'one'
+  })
+
+  await result.process()
+  a.equal(ctx.one, 1)
+})
+
 tom.test('plan.result, scope', async function () {
   const ctx = {}
   const planner = new Planner(ctx)
@@ -527,6 +544,35 @@ tom.test('plan.result, scope', async function () {
 
   await result.process()
   a.equal(ctx['one-2'], 'test')
+})
+
+tom.test('plan.result: async job, correct ctx on next job', async function () {
+  const actuals = []
+  const ctx = {}
+  const planner = new Planner(ctx)
+  const result = planner.toModel({
+    type: 'queue',
+    queue: [
+      {
+        type: 'job',
+        scope: { n: 2 },
+        fn: async function () {
+          await sleep(50)
+          return 'ok'
+        },
+        result: 'one'
+      },
+      {
+        type: 'job',
+        fn: async function () {
+          actuals.push(ctx.one)
+        }
+      },
+    ]
+  })
+
+  await result.process()
+  a.deepEqual(actuals, ['ok'])
 })
 
 export default tom

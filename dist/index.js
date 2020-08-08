@@ -1506,6 +1506,7 @@
           node.setState('skipped', node);
         }
       } else {
+        this.validate();
         try {
           this.setState('in-progress', this);
           const result = await this._process(...args);
@@ -1530,6 +1531,12 @@
             throw err
           }
         }
+      }
+    }
+
+    validate () {
+      if (this.onFail && !(this.onFail instanceof Node)) {
+        throw new Error('onFail must be a valid Node instance')
       }
     }
 
@@ -1746,7 +1753,15 @@
         //     return arrayify(plan.args).map(arg => this._replaceScopeToken(arg))
         //   }
         // }
-        return new Job(plan)
+        const job = new Job(plan);
+        if (plan.result) {
+          job.on('successful', (node, result) => {
+            if (node === job) {
+              this.ctx[node._replaceScopeToken(plan.result)] = result;
+            }
+          });
+        }
+        return job
       } else if (plan.type === 'job' && plan.fn) {
         if (plan.onFail) {
           plan.onFail = this.toModel(plan.onFail);
@@ -1833,7 +1848,6 @@
       super();
       this.name = 'Work';
       this.ctx = undefined; // proxy, monitor read and writes via traps
-      // this.plan = {}
       this.planner = new Planner();
       /**
        * Required model to process.

@@ -60,6 +60,28 @@ tom.test('onSuccess called', async function () {
   a.equal(onSuccess.state, 'successful')
 })
 
+tom.test('onSuccess args', async function () {
+  const actuals = []
+
+  class Root extends Node {
+    _process () {
+      return 'ok'
+    }
+  }
+  class Success extends Node {
+    _process (...processArgs) {
+      const args = this._getArgs(processArgs)
+      actuals.push(...args)
+    }
+  }
+
+  const onSuccess = new Success()
+  const root = new Root({ onSuccess })
+
+  await root.process()
+  a.deepEqual(actuals, ['ok', root])
+})
+
 tom.test('onSuccess not called', async function () {
   const actuals = []
 
@@ -114,6 +136,15 @@ tom.test('onSuccess fails', async function () {
   a.deepEqual(actuals, ['Root', 'Success'])
   a.equal(root.state, 'failed')
   a.equal(onSuccess.state, 'failed')
+})
+
+tom.test('Validation: onFail', async function () {
+  const node = new Node()
+  node.onFail = 'invalid'
+  a.rejects(
+    () => node.process(),
+    /onFail must be a valid Node instance/
+  )
 })
 
 export default tom
