@@ -200,12 +200,13 @@ tom.todo('template: deferred evaluation', async function () {
 })
 
 tom.test('addService: default', async function () {
-  const actuals = []
   const planner = new Planner()
-  planner.addService({
+  const service = {
     job1: n => actuals.push(n)
-  })
+  }
+  planner.addService(service)
   a.ok(planner.services.default.job1)
+  a.equal(planner.services.default, service)
 })
 
 tom.test('addService: merge into default', async function () {
@@ -222,12 +223,11 @@ tom.test('addService: merge into default', async function () {
 })
 
 tom.test('addService: named', async function () {
-  const actuals = []
   const planner = new Planner()
   planner.addService('service1', {
     job1: n => actuals.push(n)
   })
-  a.ok(!planner.services.default.job1)
+  a.ok(!(planner.services.default && planner.services.default.job1))
   a.ok(planner.services.service1.job1)
 })
 
@@ -502,7 +502,7 @@ tom.test('toModel(factory): fn, args', async function () {
   a.deepEqual(actuals, [1])
 })
 
-tom.test('plan.result', async function () {
+tom.test('plan.result: write result to context', async function () {
   const ctx = {}
   const planner = new Planner(ctx)
   const result = planner.toModel({

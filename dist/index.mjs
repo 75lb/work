@@ -1668,7 +1668,7 @@ class Queue extends Node {
 
 class Planner {
   constructor (ctx) {
-    this.services = { default: {} };
+    this.services = {};
     this.ctx = ctx;
   }
 
@@ -1806,7 +1806,6 @@ class Planner {
       if (plan.result) {
         node.on('successful', (target, result) => {
           if (target === node) {
-            console.log(target, target._replaceScopeToken(plan.result), result);
             this.ctx[target._replaceScopeToken(plan.result)] = result;
           }
         });
@@ -1828,8 +1827,12 @@ class Work extends Emitter {
     super();
     this.name = 'Work';
     this.ctx = undefined; // proxy, monitor read and writes via traps
-    this.plan = {};
+    // this.plan = {}
     this.planner = new Planner();
+    /**
+     * Required model to process.
+     */
+    this.model = null;
   }
 
   addService (...args) {
@@ -1861,14 +1864,24 @@ class Work extends Emitter {
   }
 }
 
+/** ⏏ Job
+ * Module exporting the Job class.
+ */
+
+/** ♺ Job ⇐ Node
+ * Define a job to run later.
+ */
 class Job extends Node {
   constructor (options = {}) {
     super(options);
     if (options.fn) {
+      /** ▪︎ job.fn
+       * The command to execute. Required.
+       */
       this.fn = options.fn;
     }
     if (options.result) {
-      /**
+      /** ▪︎ job.result
        * Write result to this scope key.
        */
       this.result = options.result;
@@ -1881,14 +1894,14 @@ class Job extends Node {
     const args = this._getArgs(processArgs);
     return this.fn(...args)
   }
-
-  add (node) {
-    super.add(node);
-    this.emit('add', node);
-  }
 }
 
 class Loop extends Queue {
+  /**
+  • forFn :function - { var: string, of: iterable }
+  • Node  :Node     - Node to create for each item yielded by the iterable.
+  • [options] :object
+  */
   constructor (options = {}) {
     super(options);
     this.type = 'loop';
