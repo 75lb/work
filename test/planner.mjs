@@ -42,7 +42,7 @@ tom.test('toModel(job): fn', async function () {
   a.equal(result.onFail.fn, job2)
 })
 
-tom.test('toModel(job): fn, invoke', async function () {
+tom.test('toModel(job): fn, onFail invoke', async function () {
   const planner = new Planner()
   const job1 = function () {}
   planner.addService({
@@ -61,7 +61,7 @@ tom.test('toModel(job): fn, invoke', async function () {
   a.equal(result.onFail.fn.name, 'bound job2')
 })
 
-tom.test('single job invocation', async function () {
+tom.test('toModel(job): single job invocation', async function () {
   const actuals = []
   const planner = new Planner()
   planner.addService({
@@ -76,7 +76,7 @@ tom.test('single job invocation', async function () {
   a.deepEqual(actuals, [1])
 })
 
-tom.test('single job', async function () {
+tom.test('toModel(job): single job', async function () {
   const actuals = []
   const planner = new Planner()
   const result = planner.toModel({
@@ -88,7 +88,7 @@ tom.test('single job', async function () {
   a.deepEqual(actuals, [1])
 })
 
-tom.test('single queue', async function () {
+tom.test('toModel(queue): single queue', async function () {
   const actuals = []
   const planner = new Planner()
   planner.addService({
@@ -113,7 +113,7 @@ tom.test('single queue', async function () {
   a.deepEqual(actuals, [1, 1])
 })
 
-tom.test('nested queue', async function () {
+tom.test('toModel(queue): nested queue', async function () {
   const actuals = []
   const planner = new Planner()
   planner.addService({
@@ -573,6 +573,25 @@ tom.test('plan.result: async job, correct ctx on next job', async function () {
 
   await result.process()
   a.deepEqual(actuals, ['ok'])
+})
+
+tom.test('toModel(job): invoke, onSuccess invoke', async function () {
+  const planner = new Planner()
+  planner.addService({
+    job1: function () {},
+    job2: function () {}
+  })
+  const result = planner.toModel({
+    type: 'job',
+    invoke: 'job1',
+    args: 1,
+    onSuccess: {
+      type: 'job',
+      invoke: 'job2'
+    }
+  })
+  a.equal(result.fn.name, 'bound job1')
+  a.equal(result.onSuccess.fn.name, 'bound job2')
 })
 
 export default tom

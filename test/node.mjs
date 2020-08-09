@@ -37,7 +37,7 @@ tom.test('skipIf', async function () {
   a.deepEqual(actuals, [])
 })
 
-tom.test('onSuccess called', async function () {
+tom.test('onSuccess: called', async function () {
   const actuals = []
 
   class Root extends Node {
@@ -60,7 +60,7 @@ tom.test('onSuccess called', async function () {
   a.equal(onSuccess.state, 'successful')
 })
 
-tom.test('onSuccess args', async function () {
+tom.test('onSuccess: args', async function () {
   const actuals = []
 
   class Root extends Node {
@@ -82,7 +82,7 @@ tom.test('onSuccess args', async function () {
   a.deepEqual(actuals, ['ok', root])
 })
 
-tom.test('onSuccess not called', async function () {
+tom.test('onSuccess: not called', async function () {
   const actuals = []
 
   class Root extends Node {
@@ -110,7 +110,7 @@ tom.test('onSuccess not called', async function () {
   a.equal(onSuccess.state, 'pending')
 })
 
-tom.test('onSuccess fails', async function () {
+tom.test('onSuccess: fails', async function () {
   const actuals = []
 
   class Root extends Node {
@@ -136,6 +136,23 @@ tom.test('onSuccess fails', async function () {
   a.deepEqual(actuals, ['Root', 'Success'])
   a.equal(root.state, 'failed')
   a.equal(onSuccess.state, 'failed')
+})
+
+tom.test('onSuccess: parent node returns onSuccess return value', async function () {
+  class TestNode extends Node {
+    _process () {
+      return this.constructor.name
+    }
+  }
+  class TestNode2 extends Node {
+    _process () {
+      return this.constructor.name
+    }
+  }
+
+  const node = new TestNode({ onSuccess: new TestNode2() })
+  const result = await node.process()
+  a.equal(result, 'TestNode2')
 })
 
 tom.test('Validation: onFail', async function () {

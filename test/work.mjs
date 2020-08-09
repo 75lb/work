@@ -361,5 +361,7 @@ export default tom
 */
 
 /*
-
+TODO
+: onFail should return its process result, same as onSuccess
+: node.add does not fire "ADD" event
 */

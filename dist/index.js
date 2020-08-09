@@ -1461,6 +1461,7 @@
       ]);
       this.name = options.name;
       this.args = options.args;
+      this.id = (Math.random() * 10e20).toString(16);
       if (options.argsFn) this.argsFn = options.argsFn;
       if (options.onFail) this.onFail = options.onFail;
       if (options.onSuccess) this.onSuccess = options.onSuccess;
@@ -1500,6 +1501,11 @@
       _args.set(this, val);
     }
 
+    add (node) {
+      super.add(node);
+      this.emit('add', node);
+    }
+
     async process (...args) {
       if (this.skipIf) {
         for (const node of this) {
@@ -1509,13 +1515,13 @@
         this.validate();
         try {
           this.setState('in-progress', this);
-          const result = await this._process(...args);
+          let result = await this._process(...args);
           if (this.onSuccess) {
             if (!(this.onSuccess.args && this.onSuccess.args.length)) {
               this.onSuccess.args = [result, this];
             }
             this.add(this.onSuccess);
-            await this.onSuccess.process();
+            result = await this.onSuccess.process();
           }
           this.setState('successful', this, result);
           return result
@@ -1598,12 +1604,14 @@
 
   class Queue extends Node {
     /**
-     * @param {object} options
-     * @param {function[]} options.jobs - An array of functions, each of which must return a Promise.
-     * @param {number} options.maxConcurrency
-     * @emits job-start
-     * @emits job-end
-     */
+    A node which has an iterable collection of child nodes. Maintains job stats.
+    • [options] :object
+    • [options.jobs] :function[] - An array of functions, each of which must return a Promise.
+    • [options.maxConcurrency] :number
+
+    @emits job-start
+    @emits job-end
+    */
     constructor (options) {
       super(options);
       options = Object.assign({
@@ -1615,7 +1623,6 @@
         complete: 0,
         active: 0
       };
-      this.id = (Math.random() * 10e18).toString(16);
       this.maxConcurrency = options.maxConcurrency;
       this.type = 'queue';
       for (const job of options.jobs) {
@@ -1634,10 +1641,9 @@
       _maxConcurrency.set(this, val);
     }
 
-    add (job) {
-      super.add(job);
+    add (node) {
+      super.add(node);
       this.jobStats.total++;
-      this.emit('add', job);
     }
 
     /**
@@ -1747,6 +1753,9 @@
         if (plan.onFail) {
           plan.onFail = this.toModel(plan.onFail);
         }
+        if (plan.onSuccess) {
+          plan.onSuccess = this.toModel(plan.onSuccess);
+        }
         plan.fn = this._getServiceFunction(plan);
         // if (plan.args) {
         //   plan.argsFn = function () {
@@ -1765,6 +1774,9 @@
       } else if (plan.type === 'job' && plan.fn) {
         if (plan.onFail) {
           plan.onFail = this.toModel(plan.onFail);
+        }
+        if (plan.onSuccess) {
+          plan.onSuccess = this.toModel(plan.onSuccess);
         }
         const job = new Job(plan);
         if (plan.result) {
@@ -1889,9 +1901,15 @@
    */
 
   /** ♺ Job ⇐ Node
-   * Define a job to run later.
+   * Define a job to run later. A Job is a Node which when processed executes a function.
    */
   class Job extends Node {
+    /** ▪︎ Job()
+
+    • [options] :object
+    • [options.fn] :function
+    • [options.result] :string
+    */
     constructor (options = {}) {
       super(options);
       if (options.fn) {
@@ -1906,7 +1924,6 @@
          */
         this.result = options.result;
       }
-      this.id = (Math.random() * 10e20).toString(16);
       this.type = 'job';
     }
 
