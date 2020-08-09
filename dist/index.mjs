@@ -1526,7 +1526,7 @@ class Node extends createMixin(Composite)(StateMachine) {
             this.onFail.args = [err, this];
           }
           this.add(this.onFail);
-          await this.onFail.process();
+          return this.onFail.process()
         } else {
           throw err
         }

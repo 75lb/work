@@ -155,6 +155,23 @@ tom.test('onSuccess: parent node returns onSuccess return value', async function
   a.equal(result, 'TestNode2')
 })
 
+tom.test('onFail: parent node returns onFail return value', async function () {
+  class TestNode extends Node {
+    _process () {
+      throw new Error('broken')
+    }
+  }
+  class TestNode2 extends Node {
+    _process () {
+      return this.constructor.name
+    }
+  }
+
+  const node = new TestNode({ onFail: new TestNode2() })
+  const result = await node.process()
+  a.equal(result, 'TestNode2')
+})
+
 tom.test('Validation: onFail', async function () {
   const node = new Node()
   node.onFail = 'invalid'
