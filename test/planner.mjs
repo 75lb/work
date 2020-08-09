@@ -167,39 +167,6 @@ tom.test('template: evaluated immediately', async function () {
   a.deepEqual(actuals, [1, 2])
 })
 
-tom.todo('template: deferred evaluation', async function () {
-  const actuals = []
-  const ctx = {}
-  const planner = new Planner(ctx)
-  planner.addService({
-    job1: n => actuals.push(n)
-  })
-  const root = planner.toModel({
-    type: 'queue',
-    queue: [
-      {
-        type: 'job',
-        fn: () => {
-          /* add items at run time */
-          ctx.items = [1, 2, 3]
-        }
-      },
-      {
-        type: 'template',
-        repeatForEach: () => ctx.items,
-        template: n => ({
-          type: 'job',
-          invoke: 'job1',
-          args: n
-        })
-      }
-    ]
-  })
-  await root.process()
-  this.data = actuals
-  // a.deepEqual(actuals, [1, 2, 3])
-})
-
 tom.test('addService: default', async function () {
   const planner = new Planner()
   const service = {
@@ -503,7 +470,7 @@ tom.test('toModel(factory): fn, args', async function () {
   a.deepEqual(actuals, [1])
 })
 
-tom.test('plan.result: write result to context', async function () {
+tom.test('plan.result: write result to context, job', async function () {
   const ctx = {}
   const planner = new Planner(ctx)
   const result = planner.toModel({
@@ -514,6 +481,28 @@ tom.test('plan.result: write result to context', async function () {
 
   await result.process()
   a.equal(ctx.one, 1)
+})
+
+tom.test('plan.result: write result to context, queue', async function () {
+  const ctx = {}
+  const planner = new Planner(ctx)
+  const result = planner.toModel({
+    type: 'queue',
+    queue: [
+      {
+        type: 'job',
+        fn: () => 1
+      },
+      {
+        type: 'job',
+        fn: () => 2
+      }
+    ],
+    result: 'one'
+  })
+
+  await result.process()
+  a.deepEqual(ctx.one, [1, 2])
 })
 
 tom.test('plan.result: invoke, write result to context', async function () {
@@ -593,5 +582,22 @@ tom.test('toModel(job): invoke, onSuccess invoke', async function () {
   a.equal(result.fn.name, 'bound job1')
   a.equal(result.onSuccess.fn.name, 'bound job2')
 })
+
+tom.test('_createContext()', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.on('ctx-read', (prop, val) => {
+    actuals.push(`ctx-read: ${prop}, ${val}`)
+  })
+  planner.on('ctx-write', (prop, val) => {
+    actuals.push(`ctx-write: ${prop}, ${val}`)
+  })
+  const ctx = planner._createContext()
+  ctx.something = 1
+  actuals.push('read: ' + ctx.something)
+  // this.data = actuals
+  a.deepEqual(actuals, ['ctx-write: something, 1', 'ctx-read: something, 1', 'read: 1'])
+})
+
 
 export default tom

@@ -197,10 +197,6 @@ tom.test('test-runner style: exception handling', async function () {
     ]
   })
 
-  work.on('fail', async function (err, job) {
-    actuals.push(err.message)
-  })
-
   await work.process()
   a.deepEqual(actuals, [
     'before',
@@ -212,22 +208,6 @@ tom.test('test-runner style: exception handling', async function () {
     'template: 2',
     'template: 3'
   ])
-})
-
-tom.test('createContext()', async function () {
-  const actuals = []
-  const work = new Work()
-  work.on('ctx-read', (prop, val) => {
-    actuals.push(`ctx-read: ${prop}, ${val}`)
-  })
-  work.on('ctx-write', (prop, val) => {
-    actuals.push(`ctx-write: ${prop}, ${val}`)
-  })
-  const ctx = work.createContext()
-  ctx.something = 1
-  actuals.push('read: ' + ctx.something)
-  // this.data = actuals
-  a.deepEqual(actuals, ['ctx-write: something, 1', 'ctx-read: something, 1', 'read: 1'])
 })
 
 tom.test('scope', async function () {
@@ -362,6 +342,6 @@ export default tom
 
 /*
 TODO
-: onFail should return its process result, same as onSuccess
-: node.add does not fire "ADD" event
+- implement node.cancel()
+
 */

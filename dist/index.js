@@ -1685,10 +1685,36 @@
     }
   }
 
-  class Planner {
+  class Planner extends Emitter {
     constructor (ctx) {
+      super();
       this.services = {};
-      this.ctx = ctx;
+      this.ctx = ctx || this._createContext();
+    }
+
+    _createContext () {
+      const planner = this;
+      const ctx = new Proxy({}, {
+        get: function (target, prop) {
+          planner.emit('ctx-read', prop, target[prop]);
+          return Reflect.get(...arguments)
+        },
+        set: function (target, prop, value) {
+          planner.emit('ctx-write', prop, value);
+          return Reflect.set(...arguments)
+        }
+      });
+      return ctx
+    }
+
+    _getServiceFunction (plan) {
+      const service = this.services[plan.service || 'default'];
+      const fn = service[plan.invoke];
+      if (fn) {
+        return fn.bind(service)
+      } else {
+        throw new Error('Could not find function: ' + plan.invoke)
+      }
     }
 
     addService (...args) {
@@ -1700,16 +1726,6 @@
         Object.assign(existingService, service);
       } else {
         this.services[name] = service;
-      }
-    }
-
-    _getServiceFunction (plan) {
-      const service = this.services[plan.service || 'default'];
-      const fn = service[plan.invoke];
-      if (fn) {
-        return fn.bind(service)
-      } else {
-        throw new Error('Could not find function: ' + plan.invoke)
       }
     }
 
@@ -1798,6 +1814,13 @@
         for (const item of plan.queue) {
           queue.add(this.toModel(item));
         }
+        if (plan.result) {
+          queue.on('successful', (target, result) => {
+            if (target === queue) {
+              this.ctx[target._replaceScopeToken(plan.result)] = result;
+            }
+          });
+        }
         return queue
       } else if (plan.type === 'template' && plan.template) {
         const queue = new Queue(plan);
@@ -1852,12 +1875,11 @@
     }
   }
 
-  class Work extends Emitter {
+  class Work {
     /**
      * @param {object} options
      */
     constructor (options) {
-      super();
       this.name = 'Work';
       this.ctx = undefined; // proxy, monitor read and writes via traps
       this.planner = new Planner();
@@ -1877,22 +1899,6 @@
 
     async process () {
       return this.model.process()
-    }
-
-    createContext () {
-      const work = this;
-      const ctx = new Proxy({}, {
-        get: function (target, prop) {
-          work.emit('ctx-read', prop, target[prop]);
-          return Reflect.get(...arguments)
-        },
-        set: function (target, prop, value) {
-          work.emit('ctx-write', prop, value);
-          return Reflect.set(...arguments)
-        }
-      });
-      this.planner.ctx = ctx;
-      return ctx
     }
   }
 
