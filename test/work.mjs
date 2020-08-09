@@ -343,5 +343,6 @@ export default tom
 /*
 TODO
 - implement node.cancel()
-
+- should node.global (which is a getter for node.root().scope) replace planner.ctx?
+- do we need both node.global and planner.ctx?
 */

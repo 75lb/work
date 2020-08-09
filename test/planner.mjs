@@ -470,6 +470,27 @@ tom.test('toModel(factory): fn, args', async function () {
   a.deepEqual(actuals, [1])
 })
 
+tom.test('toModel(factory): invoke', async function () {
+  const actuals = []
+  const planner = new Planner()
+  planner.addService({
+    one: function () {
+      return planner.toModel({
+        type: 'job',
+        fn: () => actuals.push(1)
+      })
+    }
+  })
+  const result = planner.toModel({
+    type: 'factory',
+    invoke: 'one'
+  })
+  await result.process()
+  // this.data = actuals
+  a.deepEqual(actuals, [1])
+})
+
+
 tom.test('plan.result: write result to context, job', async function () {
   const ctx = {}
   const planner = new Planner(ctx)

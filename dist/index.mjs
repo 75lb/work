@@ -1458,8 +1458,10 @@ class Node extends createMixin(Composite)(StateMachine) {
     this.id = (Math.random() * 10e20).toString(16);
     if (options.argsFn) this.argsFn = options.argsFn;
     if (options.onFail) this.onFail = options.onFail;
+    if (options.onFailCondition) this.onFailCondition = options.onFailCondition;
     if (options.onSuccess) this.onSuccess = options.onSuccess;
     if (options.skipIf) this.skipIf = options.skipIf;
+    if (options._process) this._process = options._process;
 
     this.scope = new Proxy({}, {
       get: (target, prop) => {
@@ -1476,10 +1478,16 @@ class Node extends createMixin(Composite)(StateMachine) {
     Object.assign(this.scope, options.scope);
   }
 
+  get global () {
+    return this.root().scope
+  }
+  set global (val) {
+    this.root().scope = val;
+  }
+
   get name () {
     return this._replaceScopeToken(_name.get(this))
   }
-
   set name (val) {
     _name.set(this, val);
   }
@@ -1506,7 +1514,7 @@ class Node extends createMixin(Composite)(StateMachine) {
         node.setState('skipped', node);
       }
     } else {
-      this.validate();
+      Node.validate(this);
       try {
         this.setState('in-progress', this);
         let result = await this._process(...args);
@@ -1521,7 +1529,9 @@ class Node extends createMixin(Composite)(StateMachine) {
         return result
       } catch (err) {
         this.setState('failed', this);
-        if (this.onFail) {
+        const processFail = !this.onFailCondition
+          || (this.onFailCondition && this.onFailCondition.test(err.message));
+        if (this.onFail && processFail) {
           if (!(this.onFail.args && this.onFail.args.length)) {
             this.onFail.args = [err, this];
           }
@@ -1531,12 +1541,6 @@ class Node extends createMixin(Composite)(StateMachine) {
           throw err
         }
       }
-    }
-  }
-
-  validate () {
-    if (this.onFail && !(this.onFail instanceof Node)) {
-      throw new Error('onFail must be a valid Node instance')
     }
   }
 
@@ -1590,6 +1594,15 @@ class Node extends createMixin(Composite)(StateMachine) {
     super.resetState();
     for (const node of this) {
       if (node !== this) node.resetState();
+    }
+  }
+
+  static validate (node) {
+    if (!(node.process && node.on && node.id)) {
+      throw new Error('not a Node instance: ' + node)
+    }
+    if (node.onFail && !(node.onFail instanceof Node)) {
+      throw new Error('onFail must be a valid Node instance')
     }
   }
 }
@@ -1848,8 +1861,23 @@ class Planner extends Emitter {
     } else if (plan._process) {
       /* already a model */
       return plan
-    } else if (plan.type === 'factory') {
+    } else if (plan.type === 'factory' && plan.fn) {
       const node = plan.fn();
+      if ('args' in plan) {
+        node.args = plan.args;
+      }
+      if (plan.result) {
+        node.on('successful', (target, result) => {
+          if (target === node) {
+            this.ctx[target._replaceScopeToken(plan.result)] = result;
+          }
+        });
+      }
+      return node
+    } else if (plan.type === 'factory' && plan.invoke) {
+      plan.fn = this._getServiceFunction(plan);
+      const node = plan.fn();
+      Node.validate(node);
       if ('args' in plan) {
         node.args = plan.args;
       }

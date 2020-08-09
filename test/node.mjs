@@ -27,6 +27,23 @@ tom.test('scope level 2', async function () {
   a.equal(two.scope.value, 1)
 })
 
+tom.test('scope: onSuccess has access to parent scope', async function () {
+  const actuals = []
+  const node = new Node({
+    scope: { value: 'a' },
+    _process: function () {
+      actuals.push(this.scope.value)
+    },
+    onSuccess: new Node({
+      _process: function () {
+        actuals.push(this.scope.value + '2')
+      }
+    })
+  })
+  await node.process()
+  a.deepEqual(actuals, ['a', 'a2'])
+})
+
 tom.test('skipIf', async function () {
   const actuals = []
   const one = new Node({
@@ -172,6 +189,39 @@ tom.test('onFail: parent node returns onFail return value', async function () {
   a.equal(result, 'TestNode2')
 })
 
+tom.test('onFail: conditional match', async function () {
+  const actuals = []
+  const node = new Node({
+    _process: function () {
+      throw new Error('broken')
+    },
+    onFailCondition: /broken/,
+    onFail: new Node({
+      _process: () => actuals.push(1)
+    })
+  })
+  await node.process()
+  a.deepEqual(actuals, [1])
+})
+
+tom.test('onFail: conditional miss', async function () {
+  const actuals = []
+  const node = new Node({
+    _process: function () {
+      throw new Error('broken')
+    },
+    onFailCondition: /something-else/,
+    onFail: new Node({
+      _process: () => actuals.push(1)
+    })
+  })
+  await a.rejects(
+    () => node.process(),
+    /broken/
+  )
+  a.deepEqual(actuals, [])
+})
+
 tom.test('Validation: onFail', async function () {
   const node = new Node()
   node.onFail = 'invalid'
@@ -179,6 +229,23 @@ tom.test('Validation: onFail', async function () {
     () => node.process(),
     /onFail must be a valid Node instance/
   )
+})
+
+tom.test('global: accessible in onSuccess', async function () {
+  const actuals = []
+  const node = new Node({
+    scope: { value: 'a' },
+    _process: function () {
+      actuals.push(this.global.value)
+    },
+    onSuccess: new Node({
+      _process: function () {
+        actuals.push(this.global.value + '2')
+      }
+    })
+  })
+  await node.process()
+  a.deepEqual(actuals, ['a', 'a2'])
 })
 
 export default tom

@@ -59,18 +59,6 @@ tom.test('async job onFail: queue', async function () {
   a.deepEqual(actuals, [1])
 })
 
-tom.todo('onFail: conditional', async function () {
-  const actuals = []
-  const job = new Job()
-  job.fn = () => {
-    throw new Error('broken')
-  }
-  job.onFailCondition = /broken/
-  job.onFail = new Job({ fn: () => actuals.push(1) })
-  await job.process()
-  a.deepEqual(actuals, [1])
-})
-
 tom.test('job.args', async function () {
   const actuals = []
   const job = new Job()
