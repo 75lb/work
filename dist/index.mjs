@@ -1769,81 +1769,56 @@ class Planner extends Emitter {
   }
 
   toModel (plan) {
-    if (!plan._process) {
+    if (plan._process) {
+      /* already a model */
+      return plan
+    } else {
       plan = Object.assign({}, plan);
     }
+
+    if (!['job', 'queue', 'template', 'loop', 'factory'].includes(plan.type)) {
+      const err = new Error('invalid plan item type: ' + plan.type);
+      err.plan = plan;
+      throw err
+    }
+
+    if (plan.onFail) {
+      plan.onFail = this.toModel(plan.onFail);
+    }
+    if (plan.onSuccess) {
+      plan.onSuccess = this.toModel(plan.onSuccess);
+    }
+
+    let node;
+
     if (plan.type === 'job' && plan.invoke) {
-      if (plan.onFail) {
-        plan.onFail = this.toModel(plan.onFail);
-      }
-      if (plan.onSuccess) {
-        plan.onSuccess = this.toModel(plan.onSuccess);
-      }
       plan.fn = this._getServiceFunction(plan);
       // if (plan.args) {
       //   plan.argsFn = function () {
       //     return arrayify(plan.args).map(arg => this._replaceScopeToken(arg))
       //   }
       // }
-      const job = new Job(plan);
-      if (plan.result) {
-        job.on('successful', (node, result) => {
-          if (node === job) {
-            this.ctx[node._replaceScopeToken(plan.result)] = result;
-          }
-        });
-      }
-      return job
+      node = new Job(plan);
     } else if (plan.type === 'job' && plan.fn) {
-      if (plan.onFail) {
-        plan.onFail = this.toModel(plan.onFail);
-      }
-      if (plan.onSuccess) {
-        plan.onSuccess = this.toModel(plan.onSuccess);
-      }
-      const job = new Job(plan);
-      if (plan.result) {
-        job.on('successful', (node, result) => {
-          if (node === job) {
-            this.ctx[node._replaceScopeToken(plan.result)] = result;
-          }
-        });
-      }
-      return job
+      node = new Job(plan);
     } else if (plan.type === 'queue' && plan.queue) {
-      if (plan.onFail) {
-        plan.onFail = this.toModel(plan.onFail);
-      }
-      if (plan.onSuccess) {
-        plan.onSuccess = this.toModel(plan.onSuccess);
-      }
-      const queue = new Queue(plan);
+      node = new Queue(plan);
       for (const item of plan.queue) {
-        queue.add(this.toModel(item));
+        node.add(this.toModel(item));
       }
-      if (plan.result) {
-        queue.on('successful', (target, result) => {
-          if (target === queue) {
-            this.ctx[target._replaceScopeToken(plan.result)] = result;
-          }
-        });
-      }
-      return queue
     } else if (plan.type === 'template' && plan.template) {
-      const queue = new Queue(plan);
+      node = new Queue(plan);
       const items = Array.isArray(plan.repeatForEach)
         ? plan.repeatForEach
         : plan.repeatForEach();
       for (const i of items) {
         // TODO: insert in place, rather than appending to end of queue
-        const node = this.toModel(plan.template(i));
-        queue.add(node);
+        node.add(this.toModel(plan.template(i)));
       }
-      return queue
     } else if (plan.type === 'loop') {
-      const loop = new Loop(plan);
+      node = new Loop(plan);
       if (plan.for) {
-        loop.for = () => {
+        node.for = () => {
           const ofFn = lodash_get(this.ctx, plan.for.of);
           if (!ofFn) {
             throw new Error('of not found: ' + plan.for.of)
@@ -1854,46 +1829,31 @@ class Planner extends Emitter {
           }
         };
       }
-      loop.Node = this.getLoopClass(plan.node);
-      if (plan.args) loop.args = this.ctx[plan.args];
-      if (plan.argsFn) loop.argsFn = this.ctx[plan.argsFn];
-      return loop
-    } else if (plan._process) {
-      /* already a model */
-      return plan
+      node.Node = this.getLoopClass(plan.node);
+      if (plan.args) node.args = this.ctx[plan.args];
+      if (plan.argsFn) node.argsFn = this.ctx[plan.argsFn];
     } else if (plan.type === 'factory' && plan.fn) {
-      const node = plan.fn();
+      node = plan.fn();
       if ('args' in plan) {
         node.args = plan.args;
       }
-      if (plan.result) {
-        node.on('successful', (target, result) => {
-          if (target === node) {
-            this.ctx[target._replaceScopeToken(plan.result)] = result;
-          }
-        });
-      }
-      return node
     } else if (plan.type === 'factory' && plan.invoke) {
       plan.fn = this._getServiceFunction(plan);
-      const node = plan.fn();
+      node = plan.fn();
       Node.validate(node);
       if ('args' in plan) {
         node.args = plan.args;
       }
-      if (plan.result) {
-        node.on('successful', (target, result) => {
-          if (target === node) {
-            this.ctx[target._replaceScopeToken(plan.result)] = result;
-          }
-        });
-      }
-      return node
-    } else {
-      const err = new Error('invalid plan item type: ' + plan.type);
-      err.plan = plan;
-      throw err
     }
+
+    if (plan.result) {
+      node.on('successful', (target, result) => {
+        if (target === node) {
+          this.ctx[target._replaceScopeToken(plan.result)] = result;
+        }
+      });
+    }
+    return node
   }
 }
 
