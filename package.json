@@ -1,7 +1,7 @@
 {
   "name": "work",
   "author": "Lloyd Brookes <75pound@gmail.com>",
-  "version": "0.8.4",
+  "version": "0.9.0",
   "description": "Isomorphic, async iterable command queue",
   "repository": "https://github.com/75lb/work",
   "license": "MIT",
