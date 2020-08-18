@@ -248,4 +248,62 @@ tom.test('global: accessible in onSuccess', async function () {
   a.deepEqual(actuals, ['a', 'a2'])
 })
 
+tom.test('finally: passing', async function () {
+  const actuals = []
+  class TestNode extends Node {
+    _process () {
+      return 'ok'
+    }
+  }
+  class NodeOnSuccess extends Node {
+    _process (arg) {
+      actuals.push(arg)
+      return 'onSuccess'
+    }
+  }
+  class NodeOnFinally extends Node {
+    _process (arg) {
+      actuals.push(arg)
+      return 'finally'
+    }
+  }
+
+  const node = new TestNode({
+    onSuccess: new NodeOnSuccess(),
+    finally: new NodeOnFinally(),
+  })
+  const result = await node.process()
+  a.equal(result, 'finally')
+  a.deepEqual(actuals, ['ok', 'onSuccess'])
+})
+
+tom.test('finally: failing', async function () {
+  const actuals = []
+  class TestNode extends Node {
+    _process () {
+      throw new Error('broken')
+    }
+  }
+  class NodeOnFail extends Node {
+    _process (err) {
+      actuals.push(err.message)
+      return 'onFail'
+    }
+  }
+  class NodeOnFinally extends Node {
+    _process (arg) {
+      actuals.push(arg)
+      return 'finally'
+    }
+  }
+
+  const node = new TestNode({
+    onFail: new NodeOnFail(),
+    finally: new NodeOnFinally(),
+  })
+  const result = await node.process()
+  a.equal(result, 'finally')
+  a.deepEqual(actuals, ['broken', 'onFail'])
+})
+
 export default tom

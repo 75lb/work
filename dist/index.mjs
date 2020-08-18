@@ -1460,6 +1460,7 @@ class Node extends createMixin(Composite)(StateMachine) {
     if (options.onFail) this.onFail = options.onFail;
     if (options.onFailCondition) this.onFailCondition = options.onFailCondition;
     if (options.onSuccess) this.onSuccess = options.onSuccess;
+    if (options.finally) this.finally = options.finally;
     if (options.skipIf) this.skipIf = options.skipIf;
     if (options._process) this._process = options._process;
 
@@ -1508,16 +1509,18 @@ class Node extends createMixin(Composite)(StateMachine) {
     this.emit('add', node);
   }
 
-  async process (...args) {
+  async process (...processArgs) {
     if (this.skipIf) {
       for (const node of this) {
         node.setState('skipped', node);
       }
     } else {
       Node.validate(this);
+      const args = this._getArgs(processArgs);
+      let result;
       try {
         this.setState('in-progress', this);
-        let result = await this._process(...args);
+        result = await this._process(...args);
         if (this.onSuccess) {
           if (!(this.onSuccess.args && this.onSuccess.args.length)) {
             this.onSuccess.args = [result, this];
@@ -1526,7 +1529,6 @@ class Node extends createMixin(Composite)(StateMachine) {
           result = await this.onSuccess.process();
         }
         this.setState('successful', this, result);
-        return result
       } catch (err) {
         this.setState('failed', this);
         const processFail = !this.onFailCondition
@@ -1536,11 +1538,20 @@ class Node extends createMixin(Composite)(StateMachine) {
             this.onFail.args = [err, this];
           }
           this.add(this.onFail);
-          return this.onFail.process()
+          result = await this.onFail.process();
         } else {
           throw err
         }
+      } finally {
+        if (this.finally) {
+          if (!(this.finally.args && this.finally.args.length)) {
+            this.finally.args = [result, this];
+          }
+          this.add(this.finally);
+          result = await this.finally.process();
+        }
       }
+      return result
     }
   }
 
@@ -1915,8 +1926,7 @@ class Job extends Node {
     this.type = 'job';
   }
 
-  async _process (...processArgs) {
-    const args = this._getArgs(processArgs);
+  async _process (...args) {
     return this.fn(...args)
   }
 }
