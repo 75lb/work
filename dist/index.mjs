@@ -1694,6 +1694,9 @@ class Queue extends Node {
     }
   }
 
+  /** ▪︎ queue._process -> :Array<*>
+  Returns an array containing the results of each node in the queue.
+  */
   async _process () {
     const output = [];
     for await (const result of this) {
@@ -1763,7 +1766,7 @@ class Planner extends Emitter {
           return fn(...args)
         }
       }
-    } else if (plan.type === 'job' && plan.fn) ; else if (plan.type === 'queue' && plan.queue) {
+    } else if (plan.type === 'queue' && plan.queue) {
       return class LoopQueue extends Queue {
         constructor (options) {
           super(options);
@@ -1804,11 +1807,6 @@ class Planner extends Emitter {
 
     if (plan.type === 'job' && plan.invoke) {
       plan.fn = this._getServiceFunction(plan);
-      // if (plan.args) {
-      //   plan.argsFn = function () {
-      //     return arrayify(plan.args).map(arg => this._replaceScopeToken(arg))
-      //   }
-      // }
       node = new Job(plan);
     } else if (plan.type === 'job' && plan.fn) {
       node = new Job(plan);
@@ -1933,9 +1931,9 @@ class Job extends Node {
 
 class Loop extends Queue {
   /**
-  • forFn :function - { var: string, of: iterable }
-  • Node  :Node     - Node to create for each item yielded by the iterable.
-  • [options] :object
+  • [options]      :object
+  • [options.for]  :function - A function which returns `{ var: string, of: iterable }`.
+  • [options.Node] :Node     - Node to create for each item yielded by the iterable.
   */
   constructor (options = {}) {
     super(options);
@@ -1962,4 +1960,32 @@ class Loop extends Queue {
   }
 }
 
-export { Job, Loop, Node, Planner, Queue, Work };
+/** ⏏ Placeholder */
+
+/** ♺ Placeholder ⇐ Node
+ *
+ */
+class Placeholder extends Node {
+  /** ▪︎ Placeholder()
+
+  • [options] :object
+  • [options.factory] :function
+  */
+  constructor (options = {}) {
+    super(options);
+    this.type = 'placeholder';
+    if (options.factory) {
+      /** ▪︎ placeholder.factory
+       */
+      this.factory = options.factory;
+    }
+    this.node = null;
+  }
+
+  async _process (...args) {
+    this.node = this.factory(...args);
+    return this.node.process()
+  }
+}
+
+export { Job, Loop, Node, Placeholder, Planner, Queue, Work };
