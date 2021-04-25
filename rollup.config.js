@@ -5,16 +5,6 @@ module.exports = [
   {
     input: 'index.mjs',
     output: {
-      file: 'dist/index.js',
-      format: 'umd',
-      name: 'work'
-    },
-    external: [],
-    plugins: [resolve({ preferBuiltins: true }), commonJs()]
-  },
-  {
-    input: 'index.mjs',
-    output: {
       file: 'dist/index.mjs',
       format: 'esm'
     },

@@ -1,14 +1,14 @@
 /**
  * @module obso
  */
-const _listeners = new WeakMap();
+const _listeners$1 = new WeakMap();
 
 /**
  * @alias module:obso
  */
-class Emitter {
+class Emitter$1 {
   constructor () {
-    _listeners.set(this, []);
+    _listeners$1.set(this, []);
   }
 
   /**
@@ -17,7 +17,7 @@ class Emitter {
    * @param ...args {*} - args to pass to the event handler
    */
   emit (eventName, ...args) {
-    const listeners = _listeners.get(this);
+    const listeners = _listeners$1.get(this);
     if (listeners && listeners.length > 0) {
       const toRemove = [];
 
@@ -46,7 +46,7 @@ class Emitter {
   }
 
   _emitTarget (eventName, target, ...args) {
-    const listeners = _listeners.get(this);
+    const listeners = _listeners$1.get(this);
     if (listeners && listeners.length > 0) {
       const toRemove = [];
 
@@ -82,7 +82,7 @@ class Emitter {
     * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
     */
   on (eventName, handler, options) {
-    const listeners = _listeners.get(this);
+    const listeners = _listeners$1.get(this);
     options = options || {};
     if (arguments.length === 1 && typeof eventName === 'function') {
       handler = eventName;
@@ -103,7 +103,7 @@ class Emitter {
    * @param handler {function} - the event handler
    */
   removeEventListener (eventName, handler) {
-    const listeners = _listeners.get(this);
+    const listeners = _listeners$1.get(this);
     if (!listeners || listeners.length === 0) return
     const index = listeners.findIndex(function (listener) {
       return listener.eventName === eventName && listener.handler === handler
@@ -125,7 +125,7 @@ class Emitter {
 /**
  * Alias for `on`.
  */
-Emitter.prototype.addEventListener = Emitter.prototype.on;
+Emitter$1.prototype.addEventListener = Emitter$1.prototype.on;
 
 /**
  * Takes any input and guarantees an array back.
@@ -159,12 +159,12 @@ Emitter.prototype.addEventListener = Emitter.prototype.on;
  * [ 1, 2, 3 ]
  */
 
-function isObject (input) {
+function isObject$2 (input) {
   return typeof input === 'object' && input !== null
 }
 
-function isArrayLike (input) {
-  return isObject(input) && typeof input.length === 'number'
+function isArrayLike$1 (input) {
+  return isObject$2(input) && typeof input.length === 'number'
 }
 
 /**
@@ -172,7 +172,7 @@ function isArrayLike (input) {
  * @returns {Array}
  * @alias module:array-back
  */
-function arrayify (input) {
+function arrayify$1 (input) {
   if (Array.isArray(input)) {
     return input
   }
@@ -181,7 +181,7 @@ function arrayify (input) {
     return []
   }
 
-  if (isArrayLike(input) || input instanceof Set) {
+  if (isArrayLike$1(input) || input instanceof Set) {
     return Array.from(input)
   }
 
@@ -225,16 +225,16 @@ const _validMoves = new WeakMap();
  * @alias module:fsm-base
  * @extends {Emitter}
  */
-class StateMachine extends Emitter {
+class StateMachine extends Emitter$1 {
   /**
    * @param {string} - Initial state, e.g. 'pending'.
    * @param {object[]} - Array of valid move rules.
    */
   constructor (initialState, validMoves) {
     super();
-    _validMoves.set(this, arrayify(validMoves).map(move => {
-      move.from = arrayify(move.from);
-      move.to = arrayify(move.to);
+    _validMoves.set(this, arrayify$1(validMoves).map(move => {
+      move.from = arrayify$1(move.from);
+      move.to = arrayify$1(move.to);
       return move
     }));
     _state.set(this, initialState);
@@ -503,6 +503,63 @@ function createMixin (Src) {
       Object.defineProperty(Mixed.prototype, Symbol.iterator, Object.getOwnPropertyDescriptor(Src.prototype, Symbol.iterator));
     }
     return Mixed
+  }
+}
+
+/**
+ * Takes any input and guarantees an array back.
+ *
+ * - Converts array-like objects (e.g. `arguments`, `Set`) to a real array.
+ * - Converts `undefined` to an empty array.
+ * - Converts any another other, singular value (including `null`, objects and iterables other than `Set`) into an array containing that value.
+ * - Ignores input which is already an array.
+ *
+ * @module array-back
+ * @example
+ * > const arrayify = require('array-back')
+ *
+ * > arrayify(undefined)
+ * []
+ *
+ * > arrayify(null)
+ * [ null ]
+ *
+ * > arrayify(0)
+ * [ 0 ]
+ *
+ * > arrayify([ 1, 2 ])
+ * [ 1, 2 ]
+ *
+ * > arrayify(new Set([ 1, 2 ]))
+ * [ 1, 2 ]
+ *
+ * > function f(){ return arrayify(arguments); }
+ * > f(1,2,3)
+ * [ 1, 2, 3 ]
+ */
+
+function isObject$1 (input) {
+  return typeof input === 'object' && input !== null
+}
+
+function isArrayLike (input) {
+  return isObject$1(input) && typeof input.length === 'number'
+}
+
+/**
+ * @param {*} - The input value to convert to an array
+ * @returns {Array}
+ * @alias module:array-back
+ */
+function arrayify (input) {
+  if (Array.isArray(input)) {
+    return input
+  } else if (input === undefined) {
+    return []
+  } else if (isArrayLike(input) || input instanceof Set) {
+    return Array.from(input)
+  } else {
+    return [input]
   }
 }
 
@@ -985,7 +1042,7 @@ function baseGet(object, path) {
  *  else `false`.
  */
 function baseIsNative(value) {
-  if (!isObject$1(value) || isMasked(value)) {
+  if (!isObject(value) || isMasked(value)) {
     return false;
   }
   var pattern = (isFunction(value) || isHostObject(value)) ? reIsNative : reIsHostCtor;
@@ -1299,7 +1356,7 @@ var isArray = Array.isArray;
 function isFunction(value) {
   // The use of `Object#toString` avoids issues with the `typeof` operator
   // in Safari 8-9 which returns 'object' for typed array and other constructors.
-  var tag = isObject$1(value) ? objectToString.call(value) : '';
+  var tag = isObject(value) ? objectToString.call(value) : '';
   return tag == funcTag || tag == genTag;
 }
 
@@ -1328,7 +1385,7 @@ function isFunction(value) {
  * _.isObject(null);
  * // => false
  */
-function isObject$1(value) {
+function isObject(value) {
   var type = typeof value;
   return !!value && (type == 'object' || type == 'function');
 }
@@ -1705,6 +1762,135 @@ class Queue extends Node {
     return output
   }
 }
+
+/**
+ * @module obso
+ */
+const _listeners = new WeakMap();
+
+/**
+ * @alias module:obso
+ */
+class Emitter {
+  constructor () {
+    _listeners.set(this, []);
+  }
+
+  /**
+   * Emit an event.
+   * @param {string} eventName - the event name to emit.
+   * @param ...args {*} - args to pass to the event handler
+   */
+  emit (eventName, ...args) {
+    const listeners = _listeners.get(this);
+    if (listeners && listeners.length > 0) {
+      const toRemove = [];
+
+      /* invoke each relevant listener */
+      for (const listener of listeners) {
+        const handlerArgs = args.slice();
+        if (listener.eventName === '__ALL__') {
+          handlerArgs.unshift(eventName);
+        }
+
+        if (listener.eventName === '__ALL__' || listener.eventName === eventName) {
+          listener.handler.call(this, ...handlerArgs);
+
+          /* remove once handler */
+          if (listener.once) toRemove.push(listener);
+        }
+      }
+
+      toRemove.forEach(listener => {
+        listeners.splice(listeners.indexOf(listener), 1);
+      });
+    }
+
+    /* bubble event up */
+    if (this.parent) this.parent._emitTarget(eventName, this, ...args);
+  }
+
+  _emitTarget (eventName, target, ...args) {
+    const listeners = _listeners.get(this);
+    if (listeners && listeners.length > 0) {
+      const toRemove = [];
+
+      /* invoke each relevant listener */
+      for (const listener of listeners) {
+        const handlerArgs = args.slice();
+        if (listener.eventName === '__ALL__') {
+          handlerArgs.unshift(eventName);
+        }
+
+        if (listener.eventName === '__ALL__' || listener.eventName === eventName) {
+          listener.handler.call(target, ...handlerArgs);
+
+          /* remove once handler */
+          if (listener.once) toRemove.push(listener);
+        }
+      }
+
+      toRemove.forEach(listener => {
+        listeners.splice(listeners.indexOf(listener), 1);
+      });
+    }
+
+    /* bubble event up */
+    if (this.parent) this.parent._emitTarget(eventName, target || this, ...args);
+  }
+
+   /**
+    * Register an event listener.
+    * @param {string} [eventName] - The event name to watch. Omitting the name will catch all events.
+    * @param {function} handler - The function to be called when `eventName` is emitted. Invocated with `this` set to `emitter`.
+    * @param {object} [options]
+    * @param {boolean} [options.once] - If `true`, the handler will be invoked once then removed.
+    */
+  on (eventName, handler, options) {
+    const listeners = _listeners.get(this);
+    options = options || {};
+    if (arguments.length === 1 && typeof eventName === 'function') {
+      handler = eventName;
+      eventName = '__ALL__';
+    }
+    if (!handler) {
+      throw new Error('handler function required')
+    } else if (handler && typeof handler !== 'function') {
+      throw new Error('handler arg must be a function')
+    } else {
+      listeners.push({ eventName, handler: handler, once: options.once });
+    }
+  }
+
+  /**
+   * Remove an event listener.
+   * @param eventName {string} - the event name
+   * @param handler {function} - the event handler
+   */
+  removeEventListener (eventName, handler) {
+    const listeners = _listeners.get(this);
+    if (!listeners || listeners.length === 0) return
+    const index = listeners.findIndex(function (listener) {
+      return listener.eventName === eventName && listener.handler === handler
+    });
+    if (index > -1) listeners.splice(index, 1);
+  }
+
+  /**
+   * Once.
+   * @param {string} eventName - the event name to watch
+   * @param {function} handler - the event handler
+   */
+  once (eventName, handler) {
+    /* TODO: the once option is browser-only */
+    this.on(eventName, handler, { once: true });
+  }
+}
+
+/**
+ * Alias for `on`.
+ */
+Emitter.prototype.addEventListener = Emitter.prototype.on;
 
 class Planner extends Emitter {
   constructor (ctx) {

@@ -5,34 +5,33 @@
   "description": "Isomorphic, async iterable command queue",
   "repository": "https://github.com/75lb/work",
   "license": "MIT",
-  "main": "dist/index.js",
-  "module": "index.mjs",
+  "main": "./index.mjs",
+  "exports": "./index.mjs",
   "engines": {
-    "node": ">=10"
+    "node": ">=14"
   },
   "scripts": {
-    "test": "npm run dist && esm-runner test/*.mjs",
-    "quiet": "npm run dist && esm-runner --view.hide-skips test/*.mjs",
+    "test": "npm run dist && test-runner test/*.mjs",
+    "quiet": "npm run dist && test-runner --view.hide-skips test/*.mjs",
     "docs": "jsdoc2md -t jsdoc2md/README.hbs index.mjs > README.md; echo",
     "dist": "rollup -c",
     "watch": "rollup -cw"
   },
   "dependencies": {
-    "array-back": "^4.0.1",
+    "array-back": "^6.0.0",
     "composite-class": "^2.0.1",
     "create-mixin": "^3.0.0",
     "fsm-base": "^0.6.0",
     "lodash.get": "^4.4.2",
-    "obso": "^0.6.0",
+    "obso": "^0.7.0",
     "typical": "^6.0.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^15.0.0",
-    "esm-runner": "^0.3.4",
-    "rollup": "^2.26.4",
+    "@rollup/plugin-commonjs": "^18.0.0",
+    "rollup": "^2.45.2",
     "rollup-plugin-node-resolve": "^5.2.0",
     "sleep-anywhere": "^1.1.3",
-    "test-runner": "^0.8.13"
+    "test-runner": "^0.8.14"
   },
   "files": [
     "*.mjs",
