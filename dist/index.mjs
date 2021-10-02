@@ -1428,14 +1428,49 @@ class Node extends createMixin(Composite)(StateMachine) {
     this.name = options.name;
     this.args = options.args;
     this.id = (Math.random() * 10e20).toString(16);
-    if (options.argsFn) this.argsFn = options.argsFn;
-    if (options.onFail) this.onFail = options.onFail;
-    if (options.onFailCondition) this.onFailCondition = options.onFailCondition;
-    if (options.onSuccess) this.onSuccess = options.onSuccess;
-    if (options.finally) this.finally = options.finally;
-    if (options.skipIf) this.skipIf = options.skipIf;
+    /**
+     * A function which returns the args.
+     * Since a function is a valid arg, `this.args` could not be reused for this value too.
+     * @type {funciton}
+     */
+    this.argsFn = options.argsFn;
+
+    /**
+     * @type {node}
+     */
+    this.onFail = options.onFail;
+
+    /**
+     * @type {RegExp}
+     */
+    this.onFailCondition = options.onFailCondition;
+
+    /**
+     * @type {node}
+     */
+    this.onSuccess = options.onSuccess;
+
+    /**
+     * @type {node}
+     */
+    this.finally = options.finally;
+
+    /**
+     * Skip processing if true.
+     * @type {boolean}
+     */
+    this.skipIf = options.skipIf;
+
+    /**
+     * The _process implementation can be passed in as an option as a shortcut instead of subclassing Node and overriding _process.
+     * TODO: Remove, this is sloppy.
+     */
     if (options._process) this._process = options._process;
 
+    /**
+     * Arbitrary data context for this node tree. Property value requests bubble up.
+     * @type {object}
+     */
     this.scope = new Proxy({}, {
       get: (target, prop) => {
         if (prop in target) {
@@ -1454,6 +1489,7 @@ class Node extends createMixin(Composite)(StateMachine) {
   get global () {
     return this.root().scope
   }
+
   set global (val) {
     this.root().scope = val;
   }
@@ -1461,6 +1497,7 @@ class Node extends createMixin(Composite)(StateMachine) {
   get name () {
     return this._replaceScopeToken(_name.get(this))
   }
+
   set name (val) {
     _name.set(this, val);
   }
@@ -1503,8 +1540,8 @@ class Node extends createMixin(Composite)(StateMachine) {
         this.setState('successful', this, result);
       } catch (err) {
         this.setState('failed', this);
-        const processFail = !this.onFailCondition
-          || (this.onFailCondition && this.onFailCondition.test(err.message));
+        const processFail = !this.onFailCondition ||
+          (this.onFailCondition && this.onFailCondition.test(err.message));
         if (this.onFail && processFail) {
           if (!(this.onFail.args && this.onFail.args.length)) {
             this.onFail.args = [err, this];
@@ -1875,9 +1912,9 @@ class Work {
 class Job extends Node {
   /** ▪︎ Job()
 
-  • [options] :object
-  • [options.fn] :function
-  • [options.result] :string
+  • [options] :object
+  • [options.fn] :function
+  • [options.result] :string
   */
   constructor (options = {}) {
     super(options);
@@ -1904,8 +1941,8 @@ class Job extends Node {
 class Loop extends Queue {
   /**
   • [options]      :object
-  • [options.for]  :function - A function which returns `{ var: string, of: iterable }`.
-  • [options.Node] :Node     - Node to create for each item yielded by the iterable.
+  • [options.for]  :function - A function which returns `{ var: string, of: iterable }`.
+  • [options.Node] :Node     - Node to create for each item yielded by the iterable.
   */
   constructor (options = {}) {
     super(options);
@@ -1940,8 +1977,8 @@ class Loop extends Queue {
 class Placeholder extends Node {
   /** ▪︎ Placeholder()
 
-  • [options] :object
-  • [options.factory] :function
+  • [options] :object
+  • [options.factory] :function
   */
   constructor (options = {}) {
     super(options);

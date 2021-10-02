@@ -1,5 +1,5 @@
 import TestRunner from 'test-runner'
-import { Queue, Job, Node } from 'work'
+import { Queue, Job } from 'work'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'
 const a = assert.strict
@@ -51,59 +51,59 @@ tom.test('.process(): events', async function () {
   await queue.process()
   // this.data = actuals
   a.deepEqual(actuals, [
-   [
-     'queue1',
-     'in-progress',
-     'pending',
-     { total: 3, complete: 0, active: 0 }
-   ],
-   [
-     'job1',
-     'in-progress',
-     'pending',
-     { total: 3, complete: 0, active: 1 }
-   ],
-   [
-     'job1',
-     'successful',
-     'in-progress',
-     { total: 3, complete: 0, active: 1 }
-   ],
-   [ 'successful', 'job1', 'job1' ],
-   [
-     'job2',
-     'in-progress',
-     'pending',
-     { total: 3, complete: 1, active: 1 }
-   ],
-   [
-     'job2',
-     'successful',
-     'in-progress',
-     { total: 3, complete: 1, active: 1 }
-   ],
-   [ 'successful', 'job2', 'job2' ],
-   [
-     'job3',
-     'in-progress',
-     'pending',
-     { total: 3, complete: 2, active: 1 }
-   ],
-   [
-     'job3',
-     'successful',
-     'in-progress',
-     { total: 3, complete: 2, active: 1 }
-   ],
-   [ 'successful', 'job3', 'job3' ],
-   [
-     'queue1',
-     'successful',
-     'in-progress',
-     { total: 3, complete: 3, active: 0 }
-   ],
-   [ 'successful', 'queue1', [ 'job1', 'job2', 'job3' ] ]
- ])
+    [
+      'queue1',
+      'in-progress',
+      'pending',
+      { total: 3, complete: 0, active: 0 }
+    ],
+    [
+      'job1',
+      'in-progress',
+      'pending',
+      { total: 3, complete: 0, active: 1 }
+    ],
+    [
+      'job1',
+      'successful',
+      'in-progress',
+      { total: 3, complete: 0, active: 1 }
+    ],
+    ['successful', 'job1', 'job1'],
+    [
+      'job2',
+      'in-progress',
+      'pending',
+      { total: 3, complete: 1, active: 1 }
+    ],
+    [
+      'job2',
+      'successful',
+      'in-progress',
+      { total: 3, complete: 1, active: 1 }
+    ],
+    ['successful', 'job2', 'job2'],
+    [
+      'job3',
+      'in-progress',
+      'pending',
+      { total: 3, complete: 2, active: 1 }
+    ],
+    [
+      'job3',
+      'successful',
+      'in-progress',
+      { total: 3, complete: 2, active: 1 }
+    ],
+    ['successful', 'job3', 'job3'],
+    [
+      'queue1',
+      'successful',
+      'in-progress',
+      { total: 3, complete: 3, active: 0 }
+    ],
+    ['successful', 'queue1', ['job1', 'job2', 'job3']]
+  ])
 })
 
 tom.test('.process(): maxConcurrency 3, results still in job order', async function () {
@@ -208,10 +208,10 @@ tom.test('onFail cancels processing of queue', async function () {
       }),
       new Job({ fn: () => { actuals.push('Never reaches here') } })
     ],
-    onFail: new Job({ fn: err => actuals.push(1) })
+    onFail: new Job({ fn: err => actuals.push(err.message) })
   })
   await queue.process()
-  a.deepEqual(actuals, [1])
+  a.deepEqual(actuals, ['broken'])
 })
 
 tom.test('job.onFail job completes before queue moves on', async function () {

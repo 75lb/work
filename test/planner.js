@@ -170,7 +170,7 @@ tom.test('template: evaluated immediately', async function () {
 tom.test('addService: default', async function () {
   const planner = new Planner()
   const service = {
-    job1: n => actuals.push(n)
+    job1: function () {}
   }
   planner.addService(service)
   a.ok(planner.services.default.job1)
@@ -193,7 +193,7 @@ tom.test('addService: merge into default', async function () {
 tom.test('addService: named', async function () {
   const planner = new Planner()
   planner.addService('service1', {
-    job1: n => actuals.push(n)
+    job1: function () {}
   })
   a.ok(!(planner.services.default && planner.services.default.job1))
   a.ok(planner.services.service1.job1)
@@ -490,7 +490,6 @@ tom.test('toModel(factory): invoke', async function () {
   a.deepEqual(actuals, [1])
 })
 
-
 tom.test('plan.result: write result to context, job', async function () {
   const ctx = {}
   const planner = new Planner(ctx)
@@ -577,7 +576,7 @@ tom.test('plan.result: async job, correct ctx on next job', async function () {
         fn: async function () {
           actuals.push(ctx.one)
         }
-      },
+      }
     ]
   })
 

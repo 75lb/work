@@ -270,7 +270,7 @@ tom.test('finally: passing', async function () {
 
   const node = new TestNode({
     onSuccess: new NodeOnSuccess(),
-    finally: new NodeOnFinally(),
+    finally: new NodeOnFinally()
   })
   const result = await node.process()
   a.equal(result, 'finally')
@@ -299,7 +299,7 @@ tom.test('finally: failing', async function () {
 
   const node = new TestNode({
     onFail: new NodeOnFail(),
-    finally: new NodeOnFinally(),
+    finally: new NodeOnFinally()
   })
   const result = await node.process()
   a.equal(result, 'finally')
