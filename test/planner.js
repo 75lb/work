@@ -1,7 +1,7 @@
 import TestRunner from 'test-runner'
-import { Planner } from '../index.mjs'
+import { Planner } from 'work'
 import assert from 'assert'
-import sleep from '../node_modules/sleep-anywhere/index.mjs'
+import sleep from 'sleep-anywhere'
 
 const a = assert.strict
 const tom = new TestRunner.Tom()

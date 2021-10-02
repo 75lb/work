@@ -1,5 +1,5 @@
 import TestRunner from 'test-runner'
-import { Queue, Job, Node } from '../index.mjs'
+import { Queue, Job, Node } from 'work'
 import assert from 'assert'
 import sleep from 'sleep-anywhere'
 const a = assert.strict

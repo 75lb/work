@@ -1,3 +1,7 @@
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 /**
  * @module obso
  */
@@ -1960,4 +1964,10 @@ class Placeholder extends Node {
   }
 }
 
-export { Job, Loop, Node, Placeholder, Planner, Queue, Work };
+exports.Job = Job;
+exports.Loop = Loop;
+exports.Node = Node;
+exports.Placeholder = Placeholder;
+exports.Planner = Planner;
+exports.Queue = Queue;
+exports.Work = Work;

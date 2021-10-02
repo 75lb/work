@@ -1,5 +1,5 @@
 import TestRunner from 'test-runner'
-import { Loop, Job } from '../index.mjs'
+import { Loop, Job } from 'work'
 import assert from 'assert'
 const a = assert.strict
 

@@ -1,5 +1,5 @@
 import TestRunner from 'test-runner'
-import { Placeholder, Job } from '../index.mjs'
+import { Placeholder, Job } from 'work'
 import assert from 'assert'
 
 const a = assert.strict

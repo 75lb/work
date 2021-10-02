@@ -1,14 +1,24 @@
-const resolve = require('rollup-plugin-node-resolve')
-const commonJs = require('@rollup/plugin-commonjs')
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import commonJs from '@rollup/plugin-commonjs'
 
-module.exports = [
+export default [
   {
-    input: 'index.mjs',
+    input: 'index.js',
     output: {
       file: 'dist/index.mjs',
       format: 'esm'
     },
     external: [],
-    plugins: [resolve({ preferBuiltins: true }), commonJs()]
+    plugins: [nodeResolve({ preferBuiltins: true }), commonJs()]
+  },
+  {
+    input: 'index.js',
+    output: {
+      file: 'dist/index.cjs',
+      format: 'cjs',
+      exports: 'auto'
+    },
+    external: [],
+    plugins: [nodeResolve({ preferBuiltins: true }), commonJs()]
   }
 ]
