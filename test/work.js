@@ -318,31 +318,3 @@ tom.test('complex model', async function () {
 })
 
 export default tom
-
-/*
-- define util functions (the toolkit, e.g. fetch from cache), the tests (the workload) and the strategy separately.
-- The toolkit
-  - A collection of abitrary utility functions.
-- The "staff" (actors, third-party services)
-  - An actor brings his own toolkit.
-- The workload
-  - A collection of commands to run.
-- The context
-  - The current environment and conditions.
-- The strategy
-  - a strategy defines which tests are run, if any, and in which order, with which concurrency
-  - each step in the strategy has a onSuccess, onFail, onComplete linking to next step.
-- A workload is executed using supplied strategy
-- A KPI.
-- High visibility of workload execution, measuring performance and efficiency.
-  - For each job in progress
-    - which tools and services it uses
-    - The context data it reads and writes
-*/
-
-/*
-TODO
-- implement node.cancel()
-- should node.global (which is a getter for node.root().scope) replace planner.ctx?
-- do we need both node.global and planner.ctx?
-*/

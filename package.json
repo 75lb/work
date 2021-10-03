@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "npm run dist && npm run test:ci",
-    "test:ci": "test-runner test/*.js",
+    "test:ci": "test-runner --view.hide-skips test/*.js",
     "quiet": "npm run dist && test-runner --view.hide-skips test/*.js",
     "dist": "rollup -c"
   },

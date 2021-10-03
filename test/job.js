@@ -19,6 +19,20 @@ tom.test('async function', async function () {
   a.deepEqual(actuals, [1])
 })
 
+tom.test('failing job: no onFail, exception thrown', async function () {
+  const job = new Job({
+    name: 'failing-fn',
+    fn: () => {
+      throw new Error('broken')
+    }
+  })
+  this.data = job
+  a.rejects(
+    () => job.process(),
+    /broken/
+  )
+})
+
 tom.test('sync job onFail: sync job', async function () {
   const actuals = []
   const job = new Job({
