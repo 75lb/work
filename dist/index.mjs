@@ -1569,7 +1569,7 @@ class Node extends createMixin(Composite)(StateMachine) {
   }
 
   toString () {
-    return `${this.name || this.invoke || this.fn.name}: ${this.state}`.replace(/^bound /, '')
+    return `${this.name || this.invoke || (this.fn && this.fn.name) || '<no name>'}: ${this.state}`.replace(/^bound /, '')
   }
 
   tree () {
