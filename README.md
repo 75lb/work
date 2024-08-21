@@ -20,6 +20,6 @@ Benefits to building a command structure.
 
 * * *
 
-&copy; 2013-21 Lloyd Brookes \<75pound@gmail.com\>.
+&copy; 2013-24 Lloyd Brookes \<75pound@gmail.com\>.
 
 Isomorphic test suite by [test-runner](https://github.com/test-runner-js/test-runner) and [web-runner](https://github.com/test-runner-js/web-runner). Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).

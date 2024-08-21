@@ -1,7 +1,5 @@
 'use strict';
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
 /**
  * @module obso
  */
@@ -483,6 +481,10 @@ function createMixin (Src) {
 }
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
 
 /**
  * lodash (Custom Build) <https://lodash.com/>
@@ -1416,6 +1418,8 @@ function get(object, path, defaultValue) {
 
 var lodash_get = get;
 
+var lodashGet = /*@__PURE__*/getDefaultExportFromCjs(lodash_get);
+
 const _name = new WeakMap();
 const _args = new WeakMap();
 
@@ -1598,7 +1602,7 @@ class Node extends createMixin(Composite)(StateMachine) {
   _replaceScopeToken (str) {
     if (typeof str === 'string' && str) {
       if (/^•[a-zA-Z]/.test(str)) {
-        return lodash_get(this.scope, str.replace('•', ''))
+        return lodashGet(this.scope, str.replace('•', ''))
       } else if (/•{.*}/.test(str)) {
         str = str.replace('•{', '${scope.');
         const fn = new Function('scope', `return \`${str}\``);
@@ -1690,12 +1694,12 @@ class Queue extends Node {
           const job = jobs.shift();
           if (job) {
             this.jobStats.active++;
-            const jobPromise = job.process()
-              .then(result => {
-                this.jobStats.active -= 1;
-                this.jobStats.complete += 1;
-                return result
-              });
+            /* TODO: yield { job, event: 'start' } or similar  */
+            const jobPromise = job.process().then(result => {
+              this.jobStats.active -= 1;
+              this.jobStats.complete += 1;
+              return result
+            });
             toRun.push(jobPromise);
           }
         }
@@ -1767,7 +1771,7 @@ class Planner extends Emitter {
     const planner = this;
     if (plan.type === 'job' && plan.invoke) {
       const fn = this._getServiceFunction(plan);
-      return class LoopJob extends Job {
+      return class LoopJob extends Job$1 {
         constructor (options) {
           super(plan);
           if (plan.onFail) {
@@ -1820,9 +1824,9 @@ class Planner extends Emitter {
 
     if (plan.type === 'job' && plan.invoke) {
       plan.fn = this._getServiceFunction(plan);
-      node = new Job(plan);
+      node = new Job$1(plan);
     } else if (plan.type === 'job' && plan.fn) {
-      node = new Job(plan);
+      node = new Job$1(plan);
     } else if (plan.type === 'queue' && plan.queue) {
       node = new Queue(plan);
       for (const item of plan.queue) {
@@ -1838,10 +1842,10 @@ class Planner extends Emitter {
         node.add(this.toModel(plan.template(i)));
       }
     } else if (plan.type === 'loop') {
-      node = new Loop(plan);
+      node = new Loop$1(plan);
       if (plan.for) {
         node.for = () => {
-          const ofFn = lodash_get(this.ctx, plan.for.of);
+          const ofFn = lodashGet(this.ctx, plan.for.of);
           if (!ofFn) {
             throw new Error('of not found: ' + plan.for.of)
           }
@@ -1942,6 +1946,8 @@ class Job extends Node {
   }
 }
 
+var Job$1 = Job;
+
 class Loop extends Queue {
   /**
   • [options]      :object
@@ -1973,7 +1979,10 @@ class Loop extends Queue {
   }
 }
 
+var Loop$1 = Loop;
+
 /** ⏏ Placeholder */
+
 
 /** ♺ Placeholder ⇐ Node
  *
@@ -2001,8 +2010,8 @@ class Placeholder extends Node {
   }
 }
 
-exports.Job = Job;
-exports.Loop = Loop;
+exports.Job = Job$1;
+exports.Loop = Loop$1;
 exports.Node = Node;
 exports.Placeholder = Placeholder;
 exports.Planner = Planner;

@@ -20,7 +20,7 @@
     "dist": "rollup -c"
   },
   "dependencies": {
-    "array-back": "^6.2.0",
+    "array-back": "^6.2.2",
     "composite-class": "^2.0.1",
     "create-mixin": "^3.0.0",
     "fsm-base": "^0.7.0",
@@ -29,11 +29,11 @@
     "typical": "^7.1.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^21.0.1",
-    "@rollup/plugin-node-resolve": "^13.0.6",
-    "rollup": "^2.58.0",
-    "sleep-anywhere": "^2.1.0",
-    "test-runner": "^0.10.0"
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rollup": "^4.21.0",
+    "sleep-anywhere": "^2.1.1",
+    "test-runner": "^0.11.0"
   },
   "files": [
     "index.js",
