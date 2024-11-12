@@ -1,40 +1,45 @@
 {
   "name": "work",
-  "author": "Lloyd Brookes <75pound@gmail.com>",
+  "author": "Lloyd Brookes <opensource@75lb.com> (http://75lb.com)",
   "version": "0.10.0",
   "description": "Isomorphic, async iterable command queue",
-  "repository": "https://github.com/75lb/work",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/75lb/work.git"
+  },
   "type": "module",
-  "exports": "./index.js",
+  "exports": {
+    "import": "./index.js",
+    "require": "./dist/index.cjs"
+  },
+  "keywords": [],
+  "license": "MIT",
   "engines": {
-    "node": ">=12.17"
+    "node": ">=12.20"
   },
   "scripts": {
-    "test": "npm run test:ci",
-    "test:ci": "test-runner --view.hide-skips test/*.js",
-    "quiet": "test-runner --view.hide-skips test/*.js"
+    "test": "npm run dist && npm run test:ci",
+    "test:ci": "75lb-nature test-runner test/*.js",
+    "dist": "75lb-nature cjs-build index.js"
   },
-  "dependencies": {
-    "array-back": "^6.2.2",
-    "composite-class": "^3.0.0-1",
-    "create-mixin": "^3.0.0",
-    "fsm-base": "^0.7.0",
-    "lodash.get": "^4.4.2",
-    "obso": "^0.7.0",
-    "typical": "^7.1.1"
+  "peerDependencies": {
+    "@75lb/nature": "latest"
   },
-  "devDependencies": {
-    "sleep-anywhere": "^2.1.1",
-    "test-runner": "^0.11.0"
+  "peerDependenciesMeta": {
+    "@75lb/nature": {
+      "optional": true
+    }
   },
   "files": [
     "index.js",
+    "dist",
     "lib"
   ],
   "standard": {
     "ignore": [
+      "tmp",
       "dist"
-    ]
+    ],
+    "envs": []
   }
 }

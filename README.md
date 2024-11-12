@@ -9,17 +9,8 @@
 
 Isomorphic, async iterable command queue. WIP.
 
-Benefits to building a command structure.
-
-* Can run the structure again later if it failed (e.g. you're offline).
-* Atomic completion, can roll back unless the entire workload succeeded
-* Attach a view
-* Common, reusable interfaces, standardising the approach to a common task.
-* Configurable concurrency
-* Async iterable
-
 * * *
 
-&copy; 2013-24 Lloyd Brookes \<75pound@gmail.com\>.
+&copy; 2013-25 Lloyd Brookes \<opensource@75lb.com\>.
 
-Isomorphic test suite by [test-runner](https://github.com/test-runner-js/test-runner) and [web-runner](https://github.com/test-runner-js/web-runner). Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).
+Isomorphic test suite by [test-runner](https://github.com/test-runner-js/test-runner). Documented by [jsdoc-to-markdown](https://github.com/jsdoc2md/jsdoc-to-markdown).
