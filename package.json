@@ -41,5 +41,8 @@
       "dist"
     ],
     "envs": []
+  },
+  "devDependencies": {
+    "sleep-anywhere": "^2.1.2"
   }
 }

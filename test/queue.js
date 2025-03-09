@@ -1,6 +1,6 @@
 import { Queue } from 'work'
 import { strict as a } from 'assert'
-import { setTimeout as sleep } from 'node:timers/promises'
+import sleep from 'sleep-anywhere'
 
 const [test, only, skip] = [new Map(), new Map(), new Map()]
 
