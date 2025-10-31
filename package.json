@@ -1,7 +1,7 @@
 {
   "name": "work",
   "author": "Lloyd Brookes <opensource@75lb.com> (http://75lb.com)",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Isomorphic, async iterable command queue",
   "repository": {
     "type": "git",
