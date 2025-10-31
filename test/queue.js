@@ -206,7 +206,7 @@ test.set('on fail handler', async function () {
   a.deepEqual(result, [ 'main', 'onFail' ])
 })
 
-// skip.set('TODO: ')
+skip.set('TODO: pass the result from the prior command into the next')
 
 export { test, only, skip }
 
