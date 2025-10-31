@@ -20,6 +20,12 @@ class Queue {
 
   constructor (options = {}) {
     this.maxConcurrency = options.maxConcurrency || 1;
+    /* TODO: Get rid of options.commands as it doesn't cater for passing in args like .add() does */
+    if (options.commands && options.commands.length) {
+      for (const command of options.commands) {
+        this.add(command);
+      }
+    }
   }
 
   add (command, ...args) {
@@ -33,11 +39,13 @@ class Queue {
   /* TODO: yield { command, event: 'start' } or similar, rather than only yielding on completion or emitting a "start" event  */
   /* TODO: Real-life updating of slotsAvailable if new commands are added while processing is in progress */
   async * [Symbol.asyncIterator] () {
+    // console.log(this.commands)
     while (this.commands.length) {
-      const slotsAvailable = this.maxConcurrency - this.stats.active;
+      const slotsAvailable = Math.min(this.maxConcurrency - this.stats.active, this.commands.length);
       if (slotsAvailable > 0) {
         const toRun = [];
         for (let i = 0; i < slotsAvailable; i++) {
+          // console.log(this.commands.length, slotsAvailable, i, this.stats.active)
           const { command, args } = this.commands.shift();
           let executable;
           if (typeof command === 'function') {
@@ -56,8 +64,6 @@ class Queue {
           toRun.push(commandPromise);
         }
         const completedCommands = await Promise.all(toRun);
-        // console.dir(toRun, { showHidden: true, depth: null, colors: true })
-        // console.dir(completedCommands, { showHidden: true, depth: null, colors: true })
         for (const command of completedCommands) {
           yield command;
         }
