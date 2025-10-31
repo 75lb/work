@@ -58,12 +58,10 @@ test.set('.process(): maxConcurrency 3, job finish order correct', async functio
 })
 
 test.set('iterator: maxConcurrency 1', async function () {
-  const queue = new Queue({
-    maxConcurrency: 1
-  })
-  queue.add(createJob(30, 1))
-  queue.add(createJob(20, 1.1))
-  queue.add(createJob(50, 1.2))
+  const queue = new Queue()
+  queue.add(new Command(), 30, 1)
+  queue.add(new Command(), 20, 1.1)
+  queue.add(new Command(), 50, 1.2)
 
   const results = []
   for await (const result of queue) {
@@ -129,7 +127,6 @@ test.set('add command: function', async function () {
   queue.add(async () => 1.1)
   queue.add(async () => 1.2)
   const results = await queue.process()
-  this.data = results
   a.deepEqual(results, [1, 1.1, 1.2])
 })
 
@@ -139,11 +136,77 @@ test.set('add command: function, maxConcurrency > number of commands', async fun
   queue.add(async () => 1.1)
   queue.add(async () => 1.2)
   const results = await queue.process()
-  this.data = results
   a.deepEqual(results, [1, 1.1, 1.2])
 })
 
-skip.set('TODO: some tests with onFail and onSuccess decision trees')
+test.set('TODO: some tests with onFail and onSuccess decision trees', async function () {
+  const queue = new Queue()
+  const result = []
+  queue.add(async function () {
+    const main = new Queue()
+    const onSuccess = new Queue()
+    main.add(async function () {
+      result.push('main')
+    })
+    onSuccess.add(async function () {
+      result.push('onSuccess')
+    })
+    await main.process()
+    await onSuccess.process()
+  })
+  await queue.process()
+  // this.data = result
+  a.deepEqual(result, [ 'main', 'onSuccess' ])
+})
+
+test.set('queue class declaration', async function () {
+  const result = []
+  class MyQueue extends Queue {
+    commands = [
+      { command: async (n) => result.push(n), args: 1 },
+      { command: async (n) => result.push(n), args: 2 }
+    ]
+  }
+  const queue = new MyQueue()
+  await queue.process()
+  // this.data = result
+  a.deepEqual(result, [ 1, 2 ])
+})
+
+test.set('on fail handler', async function () {
+  const result = []
+  async function command () {
+    const main = new Queue()
+    const onSuccess = new Queue()
+    const onFail = new Queue()
+    main.add(async function () {
+      result.push('main')
+      throw new Error('broken')
+    })
+    onSuccess.add(async function () {
+      result.push('onSuccess')
+    })
+    onFail.add(async function () {
+      result.push('onFail')
+    })
+    try {
+      await main.process()
+      await onSuccess.process()
+    } catch (err) {
+      await onFail.process()
+    }
+  }
+
+  class FailQueue extends Queue {
+    commands = [{ command }]
+  }
+  const queue = new FailQueue()
+  await queue.process()
+  // this.data = result
+  a.deepEqual(result, [ 'main', 'onFail' ])
+})
+
+// skip.set('TODO: ')
 
 export { test, only, skip }
 

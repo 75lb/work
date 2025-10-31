@@ -20,12 +20,6 @@ class Queue {
 
   constructor (options = {}) {
     this.maxConcurrency = options.maxConcurrency || 1;
-    /* TODO: Get rid of options.commands as it doesn't cater for passing in args like .add() does */
-    if (options.commands && options.commands.length) {
-      for (const command of options.commands) {
-        this.add(command);
-      }
-    }
   }
 
   add (command, ...args) {
@@ -36,17 +30,18 @@ class Queue {
   /**
    * Iterate over `commands` invoking no more than `maxConcurrency` at once. Yield results on receipt.
    */
-  /* TODO: yield { command, event: 'start' } or similar, rather than only yielding on completion or emitting a "start" event  */
+  /* TODO: yield { command, event: 'start' } or similar, rather than only yielding on completion or emitting a "start" event. Is this async yielding of start/end events possible like it is with events? */
   /* TODO: Real-life updating of slotsAvailable if new commands are added while processing is in progress */
   async * [Symbol.asyncIterator] () {
-    // console.log(this.commands)
     while (this.commands.length) {
       const slotsAvailable = Math.min(this.maxConcurrency - this.stats.active, this.commands.length);
       if (slotsAvailable > 0) {
         const toRun = [];
         for (let i = 0; i < slotsAvailable; i++) {
-          // console.log(this.commands.length, slotsAvailable, i, this.stats.active)
-          const { command, args } = this.commands.shift();
+          let { command, args } = this.commands.shift();
+          if (!Array.isArray(args)) {
+            args = [args];
+          }
           let executable;
           if (typeof command === 'function') {
             executable = command;
@@ -55,6 +50,7 @@ class Queue {
           } else {
             throw new Error('Command structure not recognised')
           }
+          /* Execute the command */
           this.stats.active++;
           const commandPromise = executable(...args).then(result => {
             this.stats.active -= 1;
